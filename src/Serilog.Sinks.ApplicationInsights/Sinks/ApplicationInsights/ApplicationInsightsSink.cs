@@ -64,8 +64,8 @@ namespace Serilog.Sinks.ApplicationInsights
             // writing logEvent as corresponding ITelemetry instance
             var telemetry = logEvent.Exception != null
                 ? (ITelemetry)new ExceptionTelemetry(logEvent.Exception)
-                : new TraceTelemetry(renderedMessage);
-
+                : new EventTelemetry(renderedMessage);
+            
             // and forwaring properties and logEvent Data to the traceTelemetry's properties
             var properties = telemetry.Context.Properties;
             properties.Add("LogLevel", logEvent.Level.ToString());
@@ -93,7 +93,7 @@ namespace Serilog.Sinks.ApplicationInsights
                         break;
                 }
             }
-
+            
             // an finally - this logs the message & its metadata to application insights
             _telemetryClient.Track(telemetry);
         }
