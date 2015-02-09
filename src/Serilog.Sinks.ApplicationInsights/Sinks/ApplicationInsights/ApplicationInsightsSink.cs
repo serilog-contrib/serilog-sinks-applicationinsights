@@ -41,16 +41,14 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </summary>
         /// <param name="applicationInsightsInstrumentationKey">The ID that determines the application component under which your data appears in Application Insights.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        public ApplicationInsightsSink(string applicationInsightsInstrumentationKey, IFormatProvider formatProvider)
+        public ApplicationInsightsSink(string applicationInsightsInstrumentationKey = null,
+            IFormatProvider formatProvider = null)
         {
-            if (applicationInsightsInstrumentationKey == null) throw new ArgumentNullException("applicationInsightsInstrumentationKey");
-            if (string.IsNullOrWhiteSpace(applicationInsightsInstrumentationKey)) throw new ArgumentOutOfRangeException("applicationInsightsInstrumentationKey", "Cannot be empty.");
+            if (string.IsNullOrWhiteSpace(applicationInsightsInstrumentationKey) == false)
+                Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey = applicationInsightsInstrumentationKey;
 
+            _telemetryClient = new TelemetryClient(Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active);
             _formatProvider = formatProvider;
-            _telemetryClient = new TelemetryClient();
-
-            if (!string.IsNullOrWhiteSpace(applicationInsightsInstrumentationKey))
-                _telemetryClient.Context.InstrumentationKey = applicationInsightsInstrumentationKey;
         }
 
         #region Implementation of ILogEventSink
@@ -68,17 +66,32 @@ namespace Serilog.Sinks.ApplicationInsights
                 ? (ITelemetry)new ExceptionTelemetry(logEvent.Exception)
                 : new TraceTelemetry(renderedMessage);
 
-
             // and forwaring properties and logEvent Data to the traceTelemetry's properties
             var properties = telemetry.Context.Properties;
             properties.Add("LogLevel", logEvent.Level.ToString());
             properties.Add("LogMessage", renderedMessage);
-            properties.Add("LogMessageTemplate", logEvent.MessageTemplate.Text);
             properties.Add("LogTimeStamp", logEvent.Timestamp.ToString(CultureInfo.InvariantCulture));
 
             foreach (var property in logEvent.Properties.Where(property => property.Value != null && !properties.ContainsKey(property.Key)))
             {
-                properties.Add(property.Key, property.Value.ToString());
+                switch (property.Key.ToLower(CultureInfo.InvariantCulture))
+                {
+                    case "username":
+                        telemetry.Context.User.AccountId = property.Value.ToString();
+                        break;
+                    case "httprequestuseragent":
+                        telemetry.Context.User.UserAgent = property.Value.ToString();
+                        break;
+                    case "httpsessionid":
+                        telemetry.Context.Session.Id = property.Value.ToString();
+                        break;
+                    case "httprequestclienthostip":
+                        telemetry.Context.Location.Ip = property.Value.ToString();
+                        break;
+                    default:
+                        properties.Add(property.Key, property.Value.ToString());
+                        break;
+                }
             }
 
             // an finally - this logs the message & its metadata to application insights
