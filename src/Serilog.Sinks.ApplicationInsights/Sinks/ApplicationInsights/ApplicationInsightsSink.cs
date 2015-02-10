@@ -18,6 +18,7 @@ using System.Linq;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -29,6 +30,9 @@ namespace Serilog.Sinks.ApplicationInsights
     /// </summary>
     public class ApplicationInsightsSink : ILogEventSink
     {
+        /// <summary>
+        /// The format provider
+        /// </summary>
         private readonly IFormatProvider _formatProvider;
 
         /// <summary>
@@ -41,13 +45,24 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </summary>
         /// <param name="applicationInsightsInstrumentationKey">The ID that determines the application component under which your data appears in Application Insights.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        public ApplicationInsightsSink(string applicationInsightsInstrumentationKey = null,
-            IFormatProvider formatProvider = null)
+        /// <param name="contextInitializers">The (optional) Application Insights context initializers.</param>
+        public ApplicationInsightsSink(
+            string applicationInsightsInstrumentationKey = null,
+            IFormatProvider formatProvider = null,
+            params IContextInitializer[] contextInitializers)
         {
             if (string.IsNullOrWhiteSpace(applicationInsightsInstrumentationKey) == false)
-                Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey = applicationInsightsInstrumentationKey;
+                TelemetryConfiguration.Active.InstrumentationKey = applicationInsightsInstrumentationKey;
 
-            _telemetryClient = new TelemetryClient(Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active);
+            if (contextInitializers != null)
+            {
+                foreach (var contextInitializer in contextInitializers)
+                {
+                    TelemetryConfiguration.Active.ContextInitializers.Add(contextInitializer);
+                }
+            }
+
+            _telemetryClient = new TelemetryClient(TelemetryConfiguration.Active);
             _formatProvider = formatProvider;
         }
 
@@ -65,32 +80,38 @@ namespace Serilog.Sinks.ApplicationInsights
             var telemetry = logEvent.Exception != null
                 ? (ITelemetry)new ExceptionTelemetry(logEvent.Exception)
                 : new EventTelemetry(renderedMessage);
-            
-            // and forwaring properties and logEvent Data to the traceTelemetry's properties
-            var properties = telemetry.Context.Properties;
-            properties.Add("LogLevel", logEvent.Level.ToString());
-            properties.Add("LogMessage", renderedMessage);
-            properties.Add("LogTimeStamp", logEvent.Timestamp.ToString(CultureInfo.InvariantCulture));
 
-            foreach (var property in logEvent.Properties.Where(property => property.Value != null && !properties.ContainsKey(property.Key)))
+            // and forwaring properties and logEvent Data to the traceTelemetry's properties
+            telemetry.Context.Properties.Add("LogLevel", logEvent.Level.ToString());
+            telemetry.Context.Properties.Add("LogMessage", renderedMessage);
+            telemetry.Context.Properties.Add("LogTimeStamp", logEvent.Timestamp.ToString(CultureInfo.InvariantCulture));
+
+            foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Context.Properties.ContainsKey(property.Key)))
             {
-                switch (property.Key.ToLower(CultureInfo.InvariantCulture))
+                if (String.Equals(property.Key, "username", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    case "username":
+                    if (string.IsNullOrWhiteSpace(telemetry.Context.User.AccountId) == false)
                         telemetry.Context.User.AccountId = property.Value.ToString();
-                        break;
-                    case "httprequestuseragent":
+                }
+                else if (String.Equals(property.Key, "httprequestuseragent", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (string.IsNullOrWhiteSpace(telemetry.Context.User.UserAgent) == false)
                         telemetry.Context.User.UserAgent = property.Value.ToString();
-                        break;
-                    case "httpsessionid":
+                }
+                else if (String.Equals(property.Key, "httpsessionid", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (string.IsNullOrWhiteSpace(telemetry.Context.Session.Id) == false)
                         telemetry.Context.Session.Id = property.Value.ToString();
-                        break;
-                    case "httprequestclienthostip":
-                        telemetry.Context.Location.Ip = property.Value.ToString();
-                        break;
-                    default:
-                        properties.Add(property.Key, property.Value.ToString());
-                        break;
+                }
+                else if (String.Equals(property.Key, "httprequestclienthostip", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    telemetry.Context.Location.Ip = property.Value.ToString();
+                    continue;
+                }
+                else
+                {
+                    telemetry.Context.Properties.Add(property.Key, property.Value.ToString());
+                    continue;
                 }
             }
             

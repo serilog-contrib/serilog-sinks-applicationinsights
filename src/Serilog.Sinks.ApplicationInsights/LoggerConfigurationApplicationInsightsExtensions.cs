@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights;
@@ -31,16 +32,19 @@ namespace Serilog
         /// <param name="applicationInsightsComponentId">The ID that determines the application component under which your data appears in Application Insights.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
+        /// <param name="contextInitializers">The (optional) Application Insights context initializers.</param>
         /// <returns>
         /// Logger configuration, allowing configuration to continue.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">loggerConfiguration</exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">applicationInsightsComponentId;Cannot be empty.</exception>
         /// <exception cref="ArgumentNullException">A required parameter is null.</exception>
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             string applicationInsightsComponentId,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
+            IFormatProvider formatProvider = null,
+            params IContextInitializer[] contextInitializers)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
 
@@ -48,7 +52,7 @@ namespace Serilog
             if (string.IsNullOrWhiteSpace(applicationInsightsComponentId)) throw new ArgumentOutOfRangeException("applicationInsightsComponentId", "Cannot be empty.");
 
             return loggerConfiguration.Sink(
-                new ApplicationInsightsSink(applicationInsightsComponentId, formatProvider),
+                new ApplicationInsightsSink(applicationInsightsComponentId, formatProvider, contextInitializers),
                 restrictedToMinimumLevel);
         }
     }
