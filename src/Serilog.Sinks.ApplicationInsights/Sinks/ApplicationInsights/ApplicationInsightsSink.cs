@@ -88,31 +88,7 @@ namespace Serilog.Sinks.ApplicationInsights
 
             foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Context.Properties.ContainsKey(property.Key)))
             {
-                if (String.Equals(property.Key, "username", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    if (string.IsNullOrWhiteSpace(telemetry.Context.User.AccountId) == false)
-                        telemetry.Context.User.AccountId = property.Value.ToString();
-                }
-                else if (String.Equals(property.Key, "httprequestuseragent", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    if (string.IsNullOrWhiteSpace(telemetry.Context.User.UserAgent) == false)
-                        telemetry.Context.User.UserAgent = property.Value.ToString();
-                }
-                else if (String.Equals(property.Key, "httpsessionid", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    if (string.IsNullOrWhiteSpace(telemetry.Context.Session.Id) == false)
-                        telemetry.Context.Session.Id = property.Value.ToString();
-                }
-                else if (String.Equals(property.Key, "httprequestclienthostip", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    telemetry.Context.Location.Ip = property.Value.ToString();
-                    continue;
-                }
-                else
-                {
-                    telemetry.Context.Properties.Add(property.Key, property.Value.ToString());
-                    continue;
-                }
+                telemetry.Context.Properties.Add(property.Key, property.Value.ToString());
             }
             
             // an finally - this logs the message & its metadata to application insights
