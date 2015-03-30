@@ -6,7 +6,7 @@
     <authors>Joerg Battermann</authors>
     <description>Serilog event sink that writes to the new Azure based Microsoft Application Insights.</description>
     <language>en-US</language>
-    <releaseNotes>Updated to 0.10.* pre-release build of Microsoft.ApplicationInsights.</releaseNotes>
+    <releaseNotes>Updated to 0.14.* pre-release build of Microsoft.ApplicationInsights.</releaseNotes>
     <projectUrl>http://serilog.net</projectUrl>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <iconUrl>http://serilog.net/images/serilog-sink-nuget.png</iconUrl>
