@@ -16,7 +16,6 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Core;
@@ -76,23 +75,47 @@ namespace Serilog.Sinks.ApplicationInsights
         {
             var renderedMessage = logEvent.RenderMessage(_formatProvider);
 
-            // writing logEvent as corresponding ITelemetry instance
-            var telemetry = logEvent.Exception != null
-                ? (ITelemetry)new ExceptionTelemetry(logEvent.Exception)
-                : new EventTelemetry(renderedMessage);
-
-            // and forwaring properties and logEvent Data to the traceTelemetry's properties
-            telemetry.Context.Properties.Add("LogLevel", logEvent.Level.ToString());
-            telemetry.Context.Properties.Add("LogMessage", renderedMessage);
-            telemetry.Context.Properties.Add("LogTimeStamp", logEvent.Timestamp.ToString(CultureInfo.InvariantCulture));
-
-            foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Context.Properties.ContainsKey(property.Key)))
+            // take logEvent and use it for the corresponding ITelemetry counterpart
+            if (logEvent.Exception != null)
             {
-                telemetry.Context.Properties.Add(property.Key, property.Value.ToString());
+                var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
+                {
+                    SeverityLevel = logEvent.Level.ToSeverityLevel()
+                };
+                
+                // write logEvent's .Properties to the AI one
+                ForwardLogEventPropertiesToTelemetryProperties(exceptionTelemetry, logEvent, renderedMessage);
+
+                _telemetryClient.Track(exceptionTelemetry);
             }
+            else
+            {
+                var eventTelemetry = new EventTelemetry(renderedMessage);
+
+                // write logEvent's .Properties to the AI one
+                ForwardLogEventPropertiesToTelemetryProperties(eventTelemetry, logEvent, renderedMessage);
+                
+                _telemetryClient.Track(eventTelemetry);
+            }
+        }
+
+        /// <summary>
+        /// Forwards the log event properties to the provided <see cref="ISupportProperties" /> instance.
+        /// </summary>
+        /// <param name="telemetry">The telemetry.</param>
+        /// <param name="logEvent">The log event.</param>
+        /// <param name="renderedMessage">The rendered message.</param>
+        /// <returns></returns>
+        private void ForwardLogEventPropertiesToTelemetryProperties(ISupportProperties telemetry, LogEvent logEvent, string renderedMessage)
+        {
+            telemetry.Properties.Add("LogLevel", logEvent.Level.ToString());
+            telemetry.Properties.Add("LogMessage", renderedMessage);
+            telemetry.Properties.Add("LogTimeStamp", logEvent.Timestamp.ToString(CultureInfo.InvariantCulture));
             
-            // an finally - this logs the message & its metadata to application insights
-            _telemetryClient.Track(telemetry);
+            foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Properties.ContainsKey(property.Key)))
+            {
+                telemetry.Properties.Add(property.Key, property.Value.ToString());
+            }
         }
 
         #endregion
