@@ -29,7 +29,7 @@ namespace Serilog
         /// Adds a sink that writes log events against Microsoft Application Insights for the provided component id.
         /// </summary>
         /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="applicationInsightsComponentId">The ID that determines the application component under which your data appears in Application Insights.</param>
+        /// <param name="instrumentationKey">The ID that determines the application component under which your data appears in Application Insights.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
         /// <param name="contextInitializers">The (optional) Application Insights context initializers.</param>
@@ -41,18 +41,18 @@ namespace Serilog
         /// <exception cref="ArgumentNullException">A required parameter is null.</exception>
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
-            string applicationInsightsComponentId,
+            string instrumentationKey,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
             params IContextInitializer[] contextInitializers)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
 
-            if (applicationInsightsComponentId == null) throw new ArgumentNullException("applicationInsightsComponentId");
-            if (string.IsNullOrWhiteSpace(applicationInsightsComponentId)) throw new ArgumentOutOfRangeException("applicationInsightsComponentId", "Cannot be empty.");
+            if (instrumentationKey == null) throw new ArgumentNullException("instrumentationKey");
+            if (string.IsNullOrWhiteSpace(instrumentationKey)) throw new ArgumentOutOfRangeException("instrumentationKey", "Cannot be empty.");
 
             return loggerConfiguration.Sink(
-                new ApplicationInsightsSink(applicationInsightsComponentId, formatProvider, contextInitializers),
+                new ApplicationInsightsSink(instrumentationKey, formatProvider, contextInitializers),
                 restrictedToMinimumLevel);
         }
     }
