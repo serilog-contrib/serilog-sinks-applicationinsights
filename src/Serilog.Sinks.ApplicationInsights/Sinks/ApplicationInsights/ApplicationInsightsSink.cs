@@ -42,16 +42,16 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <summary>
         /// Construct a sink that saves logs to the specified storage account.
         /// </summary>
-        /// <param name="applicationInsightsInstrumentationKey">The ID that determines the application component under which your data appears in Application Insights.</param>
+        /// <param name="instrumentationKey">The ID that determines the application component under which your data appears in Application Insights.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
         /// <param name="contextInitializers">The (optional) Application Insights context initializers.</param>
         public ApplicationInsightsSink(
-            string applicationInsightsInstrumentationKey = null,
+            string instrumentationKey = null,
             IFormatProvider formatProvider = null,
             params IContextInitializer[] contextInitializers)
         {
-            if (string.IsNullOrWhiteSpace(applicationInsightsInstrumentationKey) == false)
-                TelemetryConfiguration.Active.InstrumentationKey = applicationInsightsInstrumentationKey;
+            if (string.IsNullOrWhiteSpace(instrumentationKey) == false)
+                TelemetryConfiguration.Active.InstrumentationKey = instrumentationKey;
 
             if (contextInitializers != null)
             {
