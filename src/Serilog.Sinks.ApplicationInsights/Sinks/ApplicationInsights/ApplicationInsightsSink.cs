@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using Microsoft.ApplicationInsights;
@@ -42,26 +43,14 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <summary>
         /// Construct a sink that saves logs to the specified storage account.
         /// </summary>
-        /// <param name="instrumentationKey">The ID that determines the application component under which your data appears in Application Insights.</param>
+        /// <param name="configuration">Required Application Insights configuration settings.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <param name="contextInitializers">The (optional) Application Insights context initializers.</param>
-        public ApplicationInsightsSink(
-            string instrumentationKey = null,
-            IFormatProvider formatProvider = null,
-            params IContextInitializer[] contextInitializers)
+        public ApplicationInsightsSink(TelemetryConfiguration configuration,
+                                       IFormatProvider formatProvider = null)
         {
-            if (string.IsNullOrWhiteSpace(instrumentationKey) == false)
-                TelemetryConfiguration.Active.InstrumentationKey = instrumentationKey;
+            if (configuration == null) throw new ArgumentNullException("configuration");
 
-            if (contextInitializers != null)
-            {
-                foreach (var contextInitializer in contextInitializers)
-                {
-                    TelemetryConfiguration.Active.ContextInitializers.Add(contextInitializer);
-                }
-            }
-
-            _telemetryClient = new TelemetryClient(TelemetryConfiguration.Active);
+            _telemetryClient = new TelemetryClient(configuration);
             _formatProvider = formatProvider;
         }
 

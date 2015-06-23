@@ -29,7 +29,7 @@ namespace Serilog
         /// Adds a sink that writes log events against Microsoft Application Insights for the provided component id.
         /// </summary>
         /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="instrumentationKey">The ID that determines the application component under which your data appears in Application Insights.</param>
+        /// <param name="instrumentationKey">Required Application Insights instrumentation key.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
         /// <param name="contextInitializers">The (optional) Application Insights context initializers.</param>
@@ -46,14 +46,58 @@ namespace Serilog
             IFormatProvider formatProvider = null,
             params IContextInitializer[] contextInitializers)
         {
+            return loggerConfiguration.ApplicationInsights(CreateConfiguration(instrumentationKey, contextInitializers),
+                                                            restrictedToMinimumLevel, formatProvider);
+            
+        }
+
+
+        /// <summary>
+        /// Adds a sink that writes log events against Microsoft Application Insights for the provided component id.
+        /// </summary>
+        /// <param name="loggerConfiguration">The logger configuration.</param>
+        /// <param name="configuration">Required Application Insights configuration settings.</param>
+        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
+        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
+        /// <returns>
+        /// Logger configuration, allowing configuration to continue.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">loggerConfiguration</exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">applicationInsightsComponentId;Cannot be empty.</exception>
+        /// <exception cref="ArgumentNullException">A required parameter is null.</exception>
+        public static LoggerConfiguration ApplicationInsights(
+            this LoggerSinkConfiguration loggerConfiguration,
+            TelemetryConfiguration configuration,
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            IFormatProvider formatProvider = null)
+        {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
+            if (configuration == null) throw new ArgumentNullException("configuration");
 
-            if (instrumentationKey == null) throw new ArgumentNullException("instrumentationKey");
-            if (string.IsNullOrWhiteSpace(instrumentationKey)) throw new ArgumentOutOfRangeException("instrumentationKey", "Cannot be empty.");
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(configuration, formatProvider),
+                                                                        restrictedToMinimumLevel);
+        }
 
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsSink(instrumentationKey, formatProvider, contextInitializers),
-                restrictedToMinimumLevel);
+        private static TelemetryConfiguration CreateConfiguration(string instrumentationKey, IContextInitializer[] contextInitializers)
+        {
+            if (string.IsNullOrWhiteSpace(instrumentationKey)) throw new ArgumentOutOfRangeException("instrumentationKey", "Cannot be empty or null.");
+
+            var configuration = TelemetryConfiguration.CreateDefault();
+            configuration.InstrumentationKey = instrumentationKey;
+            AddContextInitializersTo(configuration, contextInitializers);
+
+            return configuration;
+        }
+
+        private static void AddContextInitializersTo(TelemetryConfiguration configuration, IContextInitializer[] contextInitializers)
+        {
+            if (contextInitializers != null)
+            {
+                foreach (var contextInitializer in contextInitializers)
+                {
+                    configuration.ContextInitializers.Add(contextInitializer);
+                }
+            }
         }
     }
 }
