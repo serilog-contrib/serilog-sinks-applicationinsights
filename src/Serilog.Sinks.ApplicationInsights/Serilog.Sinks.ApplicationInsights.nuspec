@@ -2,17 +2,17 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>Serilog.Sinks.ApplicationInsights</id>
-    <version>$version$-pre</version>
+    <version>$version$</version>
     <authors>Joerg Battermann</authors>
     <description>Serilog event sink that writes to the new Azure based Microsoft Application Insights.</description>
     <language>en-US</language>
-    <releaseNotes>Updated to 0.17.1-beta pre-release build of Microsoft.ApplicationInsights.</releaseNotes>
+    <releaseNotes>This is based on the first stable 1.0(.0) Release of Microsoft.ApplicationInsights.</releaseNotes>
     <projectUrl>http://serilog.net</projectUrl>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <iconUrl>http://serilog.net/images/serilog-sink-nuget.png</iconUrl>
     <tags>serilog logging azure applicationinsights application insights</tags>
     <dependencies>
-      <dependency id="Microsoft.ApplicationInsights" version="0.17.1-beta" />
+      <dependency id="Microsoft.ApplicationInsights" version="1.0.0" />
     </dependencies>
   </metadata>
 </package>

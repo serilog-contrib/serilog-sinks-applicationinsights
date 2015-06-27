@@ -17,6 +17,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights;
+using Serilog.Sinks.ApplicationInsights.ExtensionMethods;
 
 namespace Serilog
 {
@@ -37,8 +38,7 @@ namespace Serilog
         /// Logger configuration, allowing configuration to continue.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">loggerConfiguration</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">applicationInsightsComponentId;Cannot be empty.</exception>
-        /// <exception cref="ArgumentNullException">A required parameter is null.</exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">instrumentationKey;Cannot be empty or null.</exception>
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             string instrumentationKey,
@@ -62,9 +62,11 @@ namespace Serilog
         /// <returns>
         /// Logger configuration, allowing configuration to continue.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">loggerConfiguration</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">applicationInsightsComponentId;Cannot be empty.</exception>
-        /// <exception cref="ArgumentNullException">A required parameter is null.</exception>
+        /// <exception cref="System.ArgumentNullException">
+        /// loggerConfiguration
+        /// or
+        /// configuration
+        /// </exception>
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryConfiguration configuration,
@@ -78,26 +80,23 @@ namespace Serilog
                                                                         restrictedToMinimumLevel);
         }
 
+        /// <summary>
+        /// Creates the configuration.
+        /// </summary>
+        /// <param name="instrumentationKey">The instrumentation key.</param>
+        /// <param name="contextInitializers">The context initializers.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentOutOfRangeException">instrumentationKey;Cannot be empty or null.</exception>
         private static TelemetryConfiguration CreateConfiguration(string instrumentationKey, IContextInitializer[] contextInitializers)
         {
             if (string.IsNullOrWhiteSpace(instrumentationKey)) throw new ArgumentOutOfRangeException("instrumentationKey", "Cannot be empty or null.");
 
             var configuration = TelemetryConfiguration.CreateDefault();
             configuration.InstrumentationKey = instrumentationKey;
-            AddContextInitializersTo(configuration, contextInitializers);
+            
+            configuration.AddContextInitializers(contextInitializers);
 
             return configuration;
-        }
-
-        private static void AddContextInitializersTo(TelemetryConfiguration configuration, IContextInitializer[] contextInitializers)
-        {
-            if (contextInitializers != null)
-            {
-                foreach (var contextInitializer in contextInitializers)
-                {
-                    configuration.ContextInitializers.Add(contextInitializer);
-                }
-            }
         }
     }
 }
