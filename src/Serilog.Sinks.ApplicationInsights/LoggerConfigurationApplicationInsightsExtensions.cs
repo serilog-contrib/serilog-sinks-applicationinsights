@@ -13,11 +13,11 @@
 // limitations under the License.
 
 using System;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights;
-using Serilog.Sinks.ApplicationInsights.ExtensionMethods;
 
 namespace Serilog
 {
@@ -27,13 +27,12 @@ namespace Serilog
     public static class LoggerConfigurationApplicationInsightsExtensions
     {
         /// <summary>
-        /// Adds a sink that writes log events against Microsoft Application Insights for the provided component id.
+        /// Adds a sink that writes log events against Microsoft Application Insights for the provided <paramref name="instrumentationKey"/>.
         /// </summary>
         /// <param name="loggerConfiguration">The logger configuration.</param>
         /// <param name="instrumentationKey">Required Application Insights instrumentation key.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <param name="contextInitializers">The (optional) Application Insights context initializers.</param>
         /// <returns>
         /// Logger configuration, allowing configuration to continue.
         /// </returns>
@@ -43,17 +42,14 @@ namespace Serilog
             this LoggerSinkConfiguration loggerConfiguration,
             string instrumentationKey,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null,
-            params IContextInitializer[] contextInitializers)
+            IFormatProvider formatProvider = null)
         {
-            return loggerConfiguration.ApplicationInsights(CreateConfiguration(instrumentationKey, contextInitializers),
-                                                            restrictedToMinimumLevel, formatProvider);
-            
+            if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider), restrictedToMinimumLevel);
         }
 
-
         /// <summary>
-        /// Adds a sink that writes log events against Microsoft Application Insights for the provided component id.
+        /// Adds a sink that writes log events against Microsoft Application Insights using the provided <paramref name="configuration"/>.
         /// </summary>
         /// <param name="loggerConfiguration">The logger configuration.</param>
         /// <param name="configuration">Required Application Insights configuration settings.</param>
@@ -76,27 +72,60 @@ namespace Serilog
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
             if (configuration == null) throw new ArgumentNullException("configuration");
 
-            return loggerConfiguration.Sink(new ApplicationInsightsSink(configuration, formatProvider),
-                                                                        restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(CreateTelemetryClientFromConfiguration(configuration), formatProvider), restrictedToMinimumLevel);
         }
 
         /// <summary>
-        /// Creates the configuration.
+        /// Adds a sink that writes log events against Microsoft Application Insights using the provided <paramref name="telemetryClient"/>.
+        /// </summary>
+        /// <param name="loggerConfiguration">The logger configuration.</param>
+        /// <param name="telemetryClient">The telemetry client.</param>
+        /// <param name="restrictedToMinimumLevel">The restricted to minimum level.</param>
+        /// <param name="formatProvider">The format provider.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// loggerConfiguration
+        /// or
+        /// configuration
+        /// </exception>
+        public static LoggerConfiguration ApplicationInsights(
+            this LoggerSinkConfiguration loggerConfiguration,
+            TelemetryClient telemetryClient,
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            IFormatProvider formatProvider = null)
+        {
+            if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
+            if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
+
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(telemetryClient, formatProvider), restrictedToMinimumLevel);
+        }
+
+        /// <summary>
+        /// Creates the telemetry client from a provided <paramref name="instrumentationKey"/>.
         /// </summary>
         /// <param name="instrumentationKey">The instrumentation key.</param>
-        /// <param name="contextInitializers">The context initializers.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentOutOfRangeException">instrumentationKey;Cannot be empty or null.</exception>
-        private static TelemetryConfiguration CreateConfiguration(string instrumentationKey, IContextInitializer[] contextInitializers)
+        private static TelemetryClient CreateTelemetryClientFromInstrumentationkey(string instrumentationKey = "")
         {
-            if (string.IsNullOrWhiteSpace(instrumentationKey)) throw new ArgumentOutOfRangeException("instrumentationKey", "Cannot be empty or null.");
+            var telemetryClient = new TelemetryClient();
 
-            var configuration = TelemetryConfiguration.CreateDefault();
-            configuration.InstrumentationKey = instrumentationKey;
-            
-            configuration.AddContextInitializers(contextInitializers);
+            if (string.IsNullOrWhiteSpace(instrumentationKey) == false)
+            {
+                telemetryClient.InstrumentationKey = instrumentationKey;
+            }
 
-            return configuration;
+            return telemetryClient;
+        }
+
+        /// <summary>
+        /// Creates the telemetry client from the provided <paramref name="telemetryConfiguration"/>.
+        /// </summary>
+        /// <param name="telemetryConfiguration">The telemetry configuration.</param>
+        /// <returns>A new <see cref="TelemetryClient"/> if a <paramref name="telemetryConfiguration"/> was provided, otherwise the <see cref="TelemetryConfiguration.Active"/>.</returns>
+        private static TelemetryClient CreateTelemetryClientFromConfiguration(TelemetryConfiguration telemetryConfiguration = null)
+        {
+            return new TelemetryClient(telemetryConfiguration ?? TelemetryConfiguration.Active);
         }
     }
 }

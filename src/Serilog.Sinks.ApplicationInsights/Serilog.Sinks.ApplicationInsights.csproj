@@ -70,10 +70,7 @@
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Sinks\ApplicationInsights\ApplicationInsightsSink.cs" />
-    <Compile Include="Sinks\ApplicationInsights\ApplicationVersionContextInitializer.cs" />
-    <Compile Include="Sinks\ApplicationInsights\ExtensionMethods\TelemetryConfigurationExtensions.cs" />
     <Compile Include="Sinks\ApplicationInsights\LogEventLevelExtensions.cs" />
-    <Compile Include="Sinks\ApplicationInsights\OsVersionContextInitializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\assets\Serilog.snk">

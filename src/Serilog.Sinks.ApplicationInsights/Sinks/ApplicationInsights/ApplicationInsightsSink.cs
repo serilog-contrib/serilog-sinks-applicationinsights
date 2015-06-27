@@ -42,17 +42,17 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <summary>
         /// Construct a sink that saves logs to the specified storage account.
         /// </summary>
-        /// <param name="configuration">Required Application Insights configuration settings.</param>
+        /// <param name="telemetryClient">Required Application Insights telemetryClient.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        public ApplicationInsightsSink(TelemetryConfiguration configuration,
-                                       IFormatProvider formatProvider = null)
+        /// <exception cref="System.ArgumentNullException">telemetryClient</exception>
+        public ApplicationInsightsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null)
         {
-            if (configuration == null) throw new ArgumentNullException("configuration");
+            if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
 
-            _telemetryClient = new TelemetryClient(configuration);
+            _telemetryClient = telemetryClient;
             _formatProvider = formatProvider;
         }
-
+        
         #region Implementation of ILogEventSink
 
         /// <summary>
