@@ -78,7 +78,7 @@ namespace Serilog.Sinks.ApplicationInsights
             }
             else
             {
-                var eventTelemetry = new EventTelemetry(renderedMessage);
+                var eventTelemetry = new EventTelemetry(logEvent.MessageTemplate.Text);
 
                 // write logEvent's .Properties to the AI one
                 ForwardLogEventPropertiesToTelemetryProperties(eventTelemetry, logEvent, renderedMessage);
