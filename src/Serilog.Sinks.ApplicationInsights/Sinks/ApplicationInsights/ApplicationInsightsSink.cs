@@ -68,22 +68,27 @@ namespace Serilog.Sinks.ApplicationInsights
             {
                 var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
                 {
-                    SeverityLevel = logEvent.Level.ToSeverityLevel()
+                    SeverityLevel = logEvent.Level.ToSeverityLevel(),
+                    HandledAt = ExceptionHandledAt.UserCode,
+                    Timestamp = logEvent.Timestamp
                 };
                 
                 // write logEvent's .Properties to the AI one
                 ForwardLogEventPropertiesToTelemetryProperties(exceptionTelemetry, logEvent, renderedMessage);
 
-                _telemetryClient.Track(exceptionTelemetry);
+                _telemetryClient.TrackException(exceptionTelemetry);
             }
             else
             {
-				var eventTelemetry = new EventTelemetry(renderedMessage);
+                var eventTelemetry = new EventTelemetry(renderedMessage)
+                {
+                    Timestamp = logEvent.Timestamp
+                };
 
                 // write logEvent's .Properties to the AI one
                 ForwardLogEventPropertiesToTelemetryProperties(eventTelemetry, logEvent, renderedMessage);
                 
-                _telemetryClient.Track(eventTelemetry);
+                _telemetryClient.TrackEvent(eventTelemetry);
             }
         }
 
