@@ -6,7 +6,7 @@
     <authors>Joerg Battermann</authors>
     <description>Serilog event sink that writes to the new Azure based Microsoft Application Insights.</description>
     <language>en-US</language>
-    <releaseNotes>Updated Microsoft.ApplicationInsights to 1.2.3</releaseNotes>
+    <releaseNotes>Switched event name to Serilog's MessageTemplate improving event identification; RenderedMessage is provided as extended AI property.</releaseNotes>
     <projectUrl>http://serilog.net</projectUrl>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <iconUrl>http://serilog.net/images/serilog-sink-nuget.png</iconUrl>

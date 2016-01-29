@@ -13,11 +13,9 @@
 // limitations under the License.
 
 using System;
-using System.Globalization;
 using System.Linq;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
-using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -40,10 +38,11 @@ namespace Serilog.Sinks.ApplicationInsights
         private readonly TelemetryClient _telemetryClient;
 
         /// <summary>
-        /// Construct a sink that saves logs to the specified storage account.
+        /// Construct a sink that saves logs to the Application Insights account.
         /// </summary>
         /// <param name="telemetryClient">Required Application Insights telemetryClient.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
+        /// <exception cref="ArgumentNullException">telemetryClient</exception>
         /// <exception cref="System.ArgumentNullException">telemetryClient</exception>
         public ApplicationInsightsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null)
         {
@@ -52,7 +51,7 @@ namespace Serilog.Sinks.ApplicationInsights
             _telemetryClient = telemetryClient;
             _formatProvider = formatProvider;
         }
-        
+
         #region Implementation of ILogEventSink
 
         /// <summary>
@@ -62,7 +61,7 @@ namespace Serilog.Sinks.ApplicationInsights
         public void Emit(LogEvent logEvent)
         {
             var renderedMessage = logEvent.RenderMessage(_formatProvider);
-
+            
             // take logEvent and use it for the corresponding ITelemetry counterpart
             if (logEvent.Exception != null)
             {
@@ -80,18 +79,18 @@ namespace Serilog.Sinks.ApplicationInsights
             }
             else
             {
-                var eventTelemetry = new EventTelemetry(renderedMessage)
+                var eventTelemetry = new EventTelemetry(logEvent.MessageTemplate.Text)
                 {
                     Timestamp = logEvent.Timestamp
                 };
-
+                
                 // write logEvent's .Properties to the AI one
                 ForwardLogEventPropertiesToTelemetryProperties(eventTelemetry, logEvent, renderedMessage);
                 
                 _telemetryClient.TrackEvent(eventTelemetry);
             }
         }
-
+        
         /// <summary>
         /// Forwards the log event properties to the provided <see cref="ISupportProperties" /> instance.
         /// </summary>
@@ -102,8 +101,7 @@ namespace Serilog.Sinks.ApplicationInsights
         private void ForwardLogEventPropertiesToTelemetryProperties(ISupportProperties telemetry, LogEvent logEvent, string renderedMessage)
         {
             telemetry.Properties.Add("LogLevel", logEvent.Level.ToString());
-            telemetry.Properties.Add("LogMessage", renderedMessage);
-            telemetry.Properties.Add("LogTimeStamp", logEvent.Timestamp.ToString(CultureInfo.InvariantCulture));
+            telemetry.Properties.Add("RenderedMessage", renderedMessage);
             
             foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Properties.ContainsKey(property.Key)))
             {
