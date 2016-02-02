@@ -1,5 +1,5 @@
 ﻿{
-  "version": "2.1.0-alpha",
+  "version": "2.1.0-beta-*",
   "description": "Serilog event sink that writes to the new Azure based Microsoft Application Insights.",
   "authors": [ "Joerg Battermann" ],
   "tags": [ "serilog", "logging", "azure", "applicationinsights", "application insights" ],
