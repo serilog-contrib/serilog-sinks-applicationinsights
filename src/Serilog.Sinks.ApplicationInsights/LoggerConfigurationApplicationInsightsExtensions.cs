@@ -189,7 +189,7 @@ namespace Serilog
         /// </returns>
         /// <exception cref="System.ArgumentNullException">loggerConfiguration</exception>
         /// <exception cref="System.ArgumentOutOfRangeException">instrumentationKey;Cannot be empty or null.</exception>
-        [Obsolete("This unspecific AI Telemetry Sink will be removed >= v2.0, please use either .ApplicationInsightsEvents(..) or .ApplicationInsightsTraces(..)")]
+        [Obsolete("This unspecific AI Telemetry Sink will be removed once Serilog Core reaches v2.0, please use either .ApplicationInsightsEvents(..) or .ApplicationInsightsTraces(..)")]
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             string instrumentationKey,
@@ -216,7 +216,7 @@ namespace Serilog
         /// or
         /// configuration
         /// </exception>
-        [Obsolete("This unspecific AI Telemetry Sink will be removed >= v2.0, please use either .ApplicationInsightsEvents(..) or .ApplicationInsightsTraces(..)")]
+        [Obsolete("This unspecific AI Telemetry Sink will be removed once Serilog Core reaches v2.0, please use either .ApplicationInsightsEvents(..) or .ApplicationInsightsTraces(..)")]
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryConfiguration configuration,
@@ -241,7 +241,7 @@ namespace Serilog
         /// or
         /// configuration
         /// </exception>
-        [Obsolete("This unspecific AI Telemetry Sink will be removed >= v2.0, please use either .ApplicationInsightsEvents(..) or .ApplicationInsightsTraces(..)")]
+        [Obsolete("This unspecific AI Telemetry Sink will be removed once Serilog Core reaches v2.0, please use either .ApplicationInsightsEvents(..) or .ApplicationInsightsTraces(..)")]
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryClient telemetryClient,
