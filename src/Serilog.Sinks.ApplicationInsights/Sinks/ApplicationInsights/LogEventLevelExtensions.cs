@@ -41,7 +41,6 @@ namespace Serilog.Sinks.ApplicationInsights
                 case LogEventLevel.Error:
                 case LogEventLevel.Fatal:
                     return SeverityLevel.Error;
-                    
             }
 
             return null;

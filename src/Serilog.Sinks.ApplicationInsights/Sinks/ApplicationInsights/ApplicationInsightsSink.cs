@@ -22,75 +22,61 @@ using Serilog.Events;
 namespace Serilog.Sinks.ApplicationInsights
 {
     /// <summary>
-    /// Writes log events to a Microsoft Azure Application Insights account.
+    /// Base class for Microsoft Azure Application Insights based Sinks.
     /// Inspired by their NLog Appender implementation.
     /// </summary>
-    public class ApplicationInsightsSink : ILogEventSink
+    public abstract class ApplicationInsightsSink : ILogEventSink
     {
         /// <summary>
         /// The format provider
         /// </summary>
-        private readonly IFormatProvider _formatProvider;
+        protected IFormatProvider FormatProvider { get; private set; }
 
         /// <summary>
         /// Holds the actual Application Insights TelemetryClient that will be used for logging.
         /// </summary>
-        private readonly TelemetryClient _telemetryClient;
+        protected TelemetryClient TelemetryClient { get; private set; }
 
         /// <summary>
-        /// Construct a sink that saves logs to the Application Insights account.
+        /// Creates a sink that saves logs to the Application Insights account for the given <paramref name="telemetryClient"/> instance.
         /// </summary>
-        /// <param name="telemetryClient">Required Application Insights telemetryClient.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <exception cref="ArgumentNullException">telemetryClient</exception>
-        /// <exception cref="System.ArgumentNullException">telemetryClient</exception>
-        public ApplicationInsightsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null)
+        /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient"/>.</param>
+        /// <param name="formatProvider">Supplies culture-specific formatting information, or null for default provider.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient"/> cannot be null</exception>
+        protected ApplicationInsightsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null)
         {
             if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
 
-            _telemetryClient = telemetryClient;
-            _formatProvider = formatProvider;
+            TelemetryClient = telemetryClient;
+            FormatProvider = formatProvider;
         }
 
-        #region Implementation of ILogEventSink
+        #region AI specifc Helper methods
 
         /// <summary>
-        /// Emit the provided log event to the sink.
+        /// Emits the provided <paramref name="logEvent"/> to AI as an <see cref="ExceptionTelemetry"/>.
         /// </summary>
-        /// <param name="logEvent">The log event to write.</param>
-        public void Emit(LogEvent logEvent)
+        /// <exception cref="ArgumentNullException"><paramref name="logEvent"/> is <see langword="null" />.</exception>
+        /// <exception cref="ArgumentException"><paramref name="logEvent"/> must have a <see cref="LogEvent.Exception"/>.</exception>
+        protected void TrackAsException(LogEvent logEvent)
         {
-            var renderedMessage = logEvent.RenderMessage(_formatProvider);
-            
-            // take logEvent and use it for the corresponding ITelemetry counterpart
-            if (logEvent.Exception != null)
-            {
-                var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
-                {
-                    SeverityLevel = logEvent.Level.ToSeverityLevel(),
-                    HandledAt = ExceptionHandledAt.UserCode,
-                    Timestamp = logEvent.Timestamp
-                };
-                
-                // write logEvent's .Properties to the AI one
-                ForwardLogEventPropertiesToTelemetryProperties(exceptionTelemetry, logEvent, renderedMessage);
+            if (logEvent == null) throw new ArgumentNullException("logEvent");
+            if (logEvent.Exception == null) throw new ArgumentException("Must have an Exception", "logEvent");
 
-                _telemetryClient.TrackException(exceptionTelemetry);
-            }
-            else
+            var renderedMessage = logEvent.RenderMessage(FormatProvider);
+            var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
             {
-                var eventTelemetry = new EventTelemetry(logEvent.MessageTemplate.Text)
-                {
-                    Timestamp = logEvent.Timestamp
-                };
-                
-                // write logEvent's .Properties to the AI one
-                ForwardLogEventPropertiesToTelemetryProperties(eventTelemetry, logEvent, renderedMessage);
-                
-                _telemetryClient.TrackEvent(eventTelemetry);
-            }
+                SeverityLevel = logEvent.Level.ToSeverityLevel(),
+                HandledAt = ExceptionHandledAt.UserCode,
+                Timestamp = logEvent.Timestamp
+            };
+
+            // write logEvent's .Properties to the AI one
+            ForwardLogEventPropertiesToTelemetryProperties(exceptionTelemetry, logEvent, renderedMessage);
+
+            TelemetryClient.TrackException(exceptionTelemetry);
         }
-        
+
         /// <summary>
         /// Forwards the log event properties to the provided <see cref="ISupportProperties" /> instance.
         /// </summary>
@@ -98,16 +84,26 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <param name="logEvent">The log event.</param>
         /// <param name="renderedMessage">The rendered message.</param>
         /// <returns></returns>
-        private void ForwardLogEventPropertiesToTelemetryProperties(ISupportProperties telemetry, LogEvent logEvent, string renderedMessage)
+        protected void ForwardLogEventPropertiesToTelemetryProperties(ISupportProperties telemetry, LogEvent logEvent, string renderedMessage)
         {
             telemetry.Properties.Add("LogLevel", logEvent.Level.ToString());
             telemetry.Properties.Add("RenderedMessage", renderedMessage);
-            
+
             foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Properties.ContainsKey(property.Key)))
             {
                 telemetry.Properties.Add(property.Key, property.Value.ToString());
             }
         }
+
+        #endregion AI specifc Helper methods
+
+        #region Implementation of ILogEventSink
+
+        /// <summary>
+        /// Emit the provided log event to the sink.
+        /// </summary>
+        /// <param name="logEvent">The log event to write.</param>
+        public abstract void Emit(LogEvent logEvent);
 
         #endregion
     }
