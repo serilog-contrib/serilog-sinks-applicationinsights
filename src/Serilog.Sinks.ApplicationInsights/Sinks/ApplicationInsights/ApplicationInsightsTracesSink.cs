@@ -44,7 +44,6 @@ namespace Serilog.Sinks.ApplicationInsights
         private void TrackAsTrace(LogEvent logEvent)
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
-            if (logEvent.Exception == null) throw new ArgumentException("Must have an Exception", "logEvent");
 
             var renderedMessage = logEvent.RenderMessage(FormatProvider);
 
