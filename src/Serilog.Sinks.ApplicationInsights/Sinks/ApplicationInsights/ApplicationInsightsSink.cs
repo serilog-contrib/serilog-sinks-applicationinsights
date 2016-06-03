@@ -25,7 +25,7 @@ namespace Serilog.Sinks.ApplicationInsights
     /// Base class for Microsoft Azure Application Insights based Sinks.
     /// Inspired by their NLog Appender implementation.
     /// </summary>
-    public abstract class ApplicationInsightsSink : ILogEventSink
+    public abstract class ApplicationInsightsSink : ILogEventSink, IDisposable
     {
         /// <summary>
         /// The format provider
@@ -104,6 +104,20 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </summary>
         /// <param name="logEvent">The log event to write.</param>
         public abstract void Emit(LogEvent logEvent);
+
+        #endregion
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Flush the app insights buffer when disposed
+        /// e.g Serilog 2 - Log.CloseAndFlush();
+        /// </summary>
+        public void Dispose()
+        {
+            TelemetryClient.Flush();
+            System.Threading.Thread.Sleep(1000);
+        }
 
         #endregion
     }
