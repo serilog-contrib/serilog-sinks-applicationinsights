@@ -29,9 +29,10 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </summary>
         /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient"/>.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null for default provider.</param>
+        /// <param name="flushOnDispose">Flushes the telemetryClient on exit.</param>
         /// <exception cref="ArgumentNullException"><paramref name="telemetryClient"/> is <see langword="null" />.</exception>
-        public ApplicationInsightsEventsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null)
-            : base(telemetryClient, formatProvider)
+        public ApplicationInsightsEventsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null, bool flushOnDispose = false)
+            : base(telemetryClient, formatProvider, flushOnDispose)
         {
             if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
         }

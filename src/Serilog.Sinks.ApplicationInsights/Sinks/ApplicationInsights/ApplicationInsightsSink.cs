@@ -25,8 +25,10 @@ namespace Serilog.Sinks.ApplicationInsights
     /// Base class for Microsoft Azure Application Insights based Sinks.
     /// Inspired by their NLog Appender implementation.
     /// </summary>
-    public abstract class ApplicationInsightsSink : ILogEventSink
+    public abstract class ApplicationInsightsSink : ILogEventSink, IDisposable
     {
+        readonly bool _flushOnDispose;
+
         /// <summary>
         /// The format provider
         /// </summary>
@@ -42,13 +44,15 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </summary>
         /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient"/>.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null for default provider.</param>
+        /// <param name="flushOnDispose">Flushes the telemetryClient on exit.</param>
         /// <exception cref="ArgumentNullException"><paramref name="telemetryClient"/> cannot be null</exception>
-        protected ApplicationInsightsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null)
+        protected ApplicationInsightsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null, bool flushOnDispose = false)
         {
             if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
 
             TelemetryClient = telemetryClient;
             FormatProvider = formatProvider;
+            _flushOnDispose = flushOnDispose;
         }
 
         #region AI specifc Helper methods
@@ -104,6 +108,23 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </summary>
         /// <param name="logEvent">The log event to write.</param>
         public abstract void Emit(LogEvent logEvent);
+
+        #endregion
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Flush the app insights buffer when disposed
+        /// e.g Serilog 2 - Log.CloseAndFlush();
+        /// </summary>
+        public void Dispose()
+        {
+            if (_flushOnDispose)
+            {
+                TelemetryClient.Flush();
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
 
         #endregion
     }
