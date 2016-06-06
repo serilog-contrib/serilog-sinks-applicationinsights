@@ -45,6 +45,8 @@ namespace Serilog.Sinks.ApplicationInsights
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
 
+            CheckForAndThrowIfDisposed();
+
             var renderedMessage = logEvent.RenderMessage(FormatProvider);
 
             var traceTelemetry = new TraceTelemetry(logEvent.MessageTemplate.Text)
@@ -67,6 +69,8 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <param name="logEvent">The log event to write.</param>
         public override void Emit(LogEvent logEvent)
         {
+            CheckForAndThrowIfDisposed();
+
             if (logEvent.Exception != null)
             {
                 TrackAsException(logEvent);
