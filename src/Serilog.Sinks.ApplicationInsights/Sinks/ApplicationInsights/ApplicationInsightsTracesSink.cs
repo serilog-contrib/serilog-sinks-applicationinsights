@@ -49,7 +49,7 @@ namespace Serilog.Sinks.ApplicationInsights
 
             var renderedMessage = logEvent.RenderMessage(FormatProvider);
 
-            var traceTelemetry = new TraceTelemetry(logEvent.MessageTemplate.Text)
+            var traceTelemetry = new TraceTelemetry(renderedMessage)
             {
                 Timestamp = logEvent.Timestamp,
                 SeverityLevel = logEvent.Level.ToSeverityLevel()

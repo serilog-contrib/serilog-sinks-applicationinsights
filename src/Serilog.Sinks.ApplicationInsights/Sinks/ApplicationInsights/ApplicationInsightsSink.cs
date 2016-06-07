@@ -139,6 +139,7 @@ namespace Serilog.Sinks.ApplicationInsights
         protected void ForwardLogEventPropertiesToTelemetryProperties(ISupportProperties telemetry, LogEvent logEvent, string renderedMessage)
         {
             telemetry.Properties.Add("LogLevel", logEvent.Level.ToString());
+            telemetry.Properties.Add("MessageTemplate", logEvent.MessageTemplate.Text);
             telemetry.Properties.Add("RenderedMessage", renderedMessage);
 
             foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Properties.ContainsKey(property.Key)))
