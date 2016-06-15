@@ -144,7 +144,7 @@ namespace Serilog.Sinks.ApplicationInsights
 
             foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Properties.ContainsKey(property.Key)))
             {
-                telemetry.Properties.Add(property.Key, property.Value.ToString());
+                ApplicationInsightsPropertyFormatter.WriteValue(property.Key, property.Value, telemetry.Properties);
             }
         }
 
