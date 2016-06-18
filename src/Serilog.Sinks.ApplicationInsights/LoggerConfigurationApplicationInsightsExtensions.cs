@@ -14,6 +14,7 @@
 
 using System;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Configuration;
 using Serilog.Events;
@@ -34,6 +35,9 @@ namespace Serilog
         /// <param name="instrumentationKey">Required Application Insights instrumentation key.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
+        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent" /> data to AI <see cref="ITelemetry" /> forwarder
+        /// provides control over what data of each <see cref="LogEvent" /> is sent to Application Insights, particularly the Message itself but also Properties.
+        /// If none is provided, all properties are sent to AI (albeit flattened).</param>
         /// <returns>
         /// Logger configuration, allowing configuration to continue.
         /// </returns>
@@ -43,11 +47,14 @@ namespace Serilog
             this LoggerSinkConfiguration loggerConfiguration,
             string instrumentationKey,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
+            IFormatProvider formatProvider = null,
+            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
 
-            return loggerConfiguration.Sink(new ApplicationInsightsEventsSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(
+                new ApplicationInsightsEventsSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider, logEventDataToTelemetryForwarder),
+                restrictedToMinimumLevel);
         }
 
         /// <summary>
@@ -57,6 +64,9 @@ namespace Serilog
         /// <param name="configuration">Required Application Insights configuration settings.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
+        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent" /> data to AI <see cref="ITelemetry" /> forwarder
+        /// provides control over what data of each <see cref="LogEvent" /> is sent to Application Insights, particularly the Message itself but also Properties.
+        /// If none is provided, all properties are sent to AI (albeit flattened).</param>
         /// <returns>
         /// Logger configuration, allowing configuration to continue.
         /// </returns>
@@ -69,12 +79,15 @@ namespace Serilog
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryConfiguration configuration,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
+            IFormatProvider formatProvider = null,
+            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
             if (configuration == null) throw new ArgumentNullException("configuration");
 
-            return loggerConfiguration.Sink(new ApplicationInsightsEventsSink(CreateTelemetryClientFromConfiguration(configuration), formatProvider), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(
+                new ApplicationInsightsEventsSink(CreateTelemetryClientFromConfiguration(configuration), formatProvider, logEventDataToTelemetryForwarder),
+                restrictedToMinimumLevel);
         }
 
         /// <summary>
@@ -84,7 +97,12 @@ namespace Serilog
         /// <param name="telemetryClient">The telemetry client.</param>
         /// <param name="restrictedToMinimumLevel">The restricted to minimum level.</param>
         /// <param name="formatProvider">The format provider.</param>
-        /// <returns></returns>
+        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent" /> data to AI <see cref="ITelemetry" /> forwarder
+        /// provides control over what data of each <see cref="LogEvent" /> is sent to Application Insights, particularly the Message itself but also Properties.
+        /// If none is provided, all properties are sent to AI (albeit flattened).</param>
+        /// <returns>
+        /// Logger configuration, allowing configuration to continue.
+        /// </returns>
         /// <exception cref="System.ArgumentNullException">
         /// loggerConfiguration
         /// or
@@ -94,12 +112,15 @@ namespace Serilog
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryClient telemetryClient,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
+            IFormatProvider formatProvider = null,
+            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
             if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
 
-            return loggerConfiguration.Sink(new ApplicationInsightsEventsSink(telemetryClient, formatProvider), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(
+                new ApplicationInsightsEventsSink(telemetryClient, formatProvider, logEventDataToTelemetryForwarder),
+                restrictedToMinimumLevel);
         }
 
         /// <summary>
@@ -109,6 +130,9 @@ namespace Serilog
         /// <param name="instrumentationKey">Required Application Insights instrumentation key.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
+        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent" /> data to AI <see cref="ITelemetry" /> forwarder
+        /// provides control over what data of each <see cref="LogEvent" /> is sent to Application Insights, particularly the Message itself but also Properties.
+        /// If none is provided, all properties are sent to AI (albeit flattened).</param>
         /// <returns>
         /// Logger configuration, allowing configuration to continue.
         /// </returns>
@@ -118,11 +142,14 @@ namespace Serilog
             this LoggerSinkConfiguration loggerConfiguration,
             string instrumentationKey,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
+            IFormatProvider formatProvider = null,
+            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
 
-            return loggerConfiguration.Sink(new ApplicationInsightsTracesSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(
+                new ApplicationInsightsTracesSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider, logEventDataToTelemetryForwarder),
+                restrictedToMinimumLevel);
         }
 
         /// <summary>
@@ -132,6 +159,9 @@ namespace Serilog
         /// <param name="configuration">Required Application Insights configuration settings.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
+        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent" /> data to AI <see cref="ITelemetry" /> forwarder
+        /// provides control over what data of each <see cref="LogEvent" /> is sent to Application Insights, particularly the Message itself but also Properties.
+        /// If none is provided, all properties are sent to AI (albeit flattened).</param>
         /// <returns>
         /// Logger configuration, allowing configuration to continue.
         /// </returns>
@@ -144,12 +174,15 @@ namespace Serilog
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryConfiguration configuration,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
+            IFormatProvider formatProvider = null,
+            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
             if (configuration == null) throw new ArgumentNullException("configuration");
 
-            return loggerConfiguration.Sink(new ApplicationInsightsTracesSink(CreateTelemetryClientFromConfiguration(configuration), formatProvider), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(
+                new ApplicationInsightsTracesSink(CreateTelemetryClientFromConfiguration(configuration), formatProvider, logEventDataToTelemetryForwarder),
+                restrictedToMinimumLevel);
         }
 
         /// <summary>
@@ -159,7 +192,12 @@ namespace Serilog
         /// <param name="telemetryClient">The telemetry client.</param>
         /// <param name="restrictedToMinimumLevel">The restricted to minimum level.</param>
         /// <param name="formatProvider">The format provider.</param>
-        /// <returns></returns>
+        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent" /> data to AI <see cref="ITelemetry" /> forwarder
+        /// provides control over what data of each <see cref="LogEvent" /> is sent to Application Insights, particularly the Message itself but also Properties.
+        /// If none is provided, all properties are sent to AI (albeit flattened).</param>
+        /// <returns>
+        /// Logger configuration, allowing configuration to continue.
+        /// </returns>
         /// <exception cref="System.ArgumentNullException">
         /// loggerConfiguration
         /// or
@@ -169,12 +207,15 @@ namespace Serilog
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryClient telemetryClient,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
+            IFormatProvider formatProvider = null,
+            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException("loggerConfiguration");
             if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
 
-            return loggerConfiguration.Sink(new ApplicationInsightsTracesSink(telemetryClient, formatProvider), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(
+                new ApplicationInsightsTracesSink(telemetryClient, formatProvider, logEventDataToTelemetryForwarder),
+                restrictedToMinimumLevel);
         }
         
         /// <summary>

@@ -14,6 +14,7 @@
 
 using System;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
 
@@ -25,13 +26,20 @@ namespace Serilog.Sinks.ApplicationInsights
     public class ApplicationInsightsTracesSink : ApplicationInsightsSink
     {
         /// <summary>
-        /// Creates a sink that saves logs as Traces to the Application Insights account for the given <paramref name="telemetryClient"/> instance.
+        /// Creates a sink that saves logs as Traces to the Application Insights account for the given <paramref name="telemetryClient" /> instance.
         /// </summary>
-        /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient"/>.</param>
+        /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient" />.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null for default provider.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient"/> is <see langword="null" />.</exception>
-        public ApplicationInsightsTracesSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null)
-            : base(telemetryClient, formatProvider)
+        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent" /> data to AI <see cref="ITelemetry" /> forwarder
+        /// provides control over what data of each <see cref="LogEvent" /> is sent to Application Insights, particularly the Message itself but also Properties.
+        /// If none is provided, all properties are sent to AI (albeit flattened).</param>
+        /// <exception cref="System.ArgumentNullException">telemetryClient</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> is <see langword="null" />.</exception>
+        public ApplicationInsightsTracesSink(
+            TelemetryClient telemetryClient,
+            IFormatProvider formatProvider = null,
+            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
+            : base(telemetryClient, formatProvider, logEventDataToTelemetryForwarder)
         {
             if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
         }
@@ -56,7 +64,7 @@ namespace Serilog.Sinks.ApplicationInsights
             };
 
             // write logEvent's .Properties to the AI one
-            ForwardLogEventPropertiesToTelemetryProperties(traceTelemetry, logEvent, renderedMessage);
+            ForwardLogEventDataToTelemetry(logEvent, FormatProvider, traceTelemetry, traceTelemetry);
 
             TelemetryClient.TrackTrace(traceTelemetry);
         }

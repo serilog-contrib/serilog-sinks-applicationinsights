@@ -14,8 +14,11 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Core;
 using Serilog.Events;
@@ -32,6 +35,23 @@ namespace Serilog.Sinks.ApplicationInsights
         private long _isDisposed = 0;
 
         private readonly TelemetryClient _telemetryClient;
+        private readonly IFormatProvider _formatProvider;
+        private readonly Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> _logEventDataToTelemetryForwarder;
+
+        /// <summary>
+        /// The <see cref="LogEvent.Level"/> is forwarded to the underlying AI Telemetry and its .Properties using this key.
+        /// </summary>
+        public const string TelemetryPropertiesLogLevel = "LogLevel";
+
+        /// <summary>
+        /// The <see cref="LogEvent.MessageTemplate"/> is forwarded to the underlying AI Telemetry and its .Properties using this key.
+        /// </summary>
+        public const string TelemetryPropertiesMessageTemplate = "MessageTemplate";
+
+        /// <summary>
+        /// The result of <see cref="LogEvent.RenderMessage(System.IFormatProvider)"/> is forwarded to the underlying AI Telemetry and its .Properties using this key.
+        /// </summary>
+        public const string TelemetryPropertiesRenderedMessage = "RenderedMessage";
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance is being disposed.
@@ -70,9 +90,36 @@ namespace Serilog.Sinks.ApplicationInsights
         }
 
         /// <summary>
-        /// The format provider
+        /// Gets the format provider.
         /// </summary>
-        protected IFormatProvider FormatProvider { get; private set; }
+        /// <value>
+        /// The format provider.
+        /// </value>
+        protected IFormatProvider FormatProvider
+        {
+            get
+            {
+                CheckForAndThrowIfDisposed();
+
+                return _formatProvider;
+            }
+        }
+
+        /// <summary>
+        /// Gets the log event data to telemetry forwarder.
+        /// </summary>
+        /// <value>
+        /// The log event data to telemetry forwarder.
+        /// </value>
+        protected Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> LogEventDataToTelemetryForwarder
+        {
+            get
+            {
+                CheckForAndThrowIfDisposed();
+
+                return _logEventDataToTelemetryForwarder;
+            }
+        }
 
         /// <summary>
         /// Holds the actual Application Insights TelemetryClient that will be used for logging.
@@ -88,17 +135,26 @@ namespace Serilog.Sinks.ApplicationInsights
         }
 
         /// <summary>
-        /// Creates a sink that saves logs to the Application Insights account for the given <paramref name="telemetryClient"/> instance.
+        /// Creates a sink that saves logs to the Application Insights account for the given <paramref name="telemetryClient" /> instance.
         /// </summary>
-        /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient"/>.</param>
+        /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient" />.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null for default provider.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient"/> cannot be null</exception>
-        protected ApplicationInsightsSink(TelemetryClient telemetryClient, IFormatProvider formatProvider = null)
+        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent"/> data to AI <see cref="ITelemetry"/> forwarder
+        /// provides control over what data of each <see cref="LogEvent"/> is sent to Application Insights, particularly the Message itself but also Properties.
+        /// If none is provided, all properties are sent to AI (albeit flattened).
+        /// </param>
+        /// <exception cref="System.ArgumentNullException">telemetryClient</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> cannot be null</exception>
+        protected ApplicationInsightsSink(
+            TelemetryClient telemetryClient,
+            IFormatProvider formatProvider = null,
+            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
         {
             if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
 
             _telemetryClient = telemetryClient;
-            FormatProvider = formatProvider;
+            _formatProvider = formatProvider;
+            _logEventDataToTelemetryForwarder = logEventDataToTelemetryForwarder ?? DefaultLogEventDataToTelemetryForwarder;
         }
 
         #region AI specifc Helper methods
@@ -115,7 +171,6 @@ namespace Serilog.Sinks.ApplicationInsights
 
             CheckForAndThrowIfDisposed();
 
-            var renderedMessage = logEvent.RenderMessage(FormatProvider);
             var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
             {
                 SeverityLevel = logEvent.Level.ToSeverityLevel(),
@@ -124,27 +179,63 @@ namespace Serilog.Sinks.ApplicationInsights
             };
 
             // write logEvent's .Properties to the AI one
-            ForwardLogEventPropertiesToTelemetryProperties(exceptionTelemetry, logEvent, renderedMessage);
+            ForwardLogEventDataToTelemetry(logEvent, FormatProvider, exceptionTelemetry, exceptionTelemetry);
 
             TelemetryClient.TrackException(exceptionTelemetry);
         }
 
         /// <summary>
-        /// Forwards the log event properties to the provided <see cref="ISupportProperties" /> instance.
+        /// Forwards the <see cref="LogEvent"/> data to the <paramref name="telemetry"/> and its <paramref name="telemetryProperties"/>.
         /// </summary>
-        /// <param name="telemetry">The telemetry.</param>
         /// <param name="logEvent">The log event.</param>
-        /// <param name="renderedMessage">The rendered message.</param>
-        /// <returns></returns>
-        protected void ForwardLogEventPropertiesToTelemetryProperties(ISupportProperties telemetry, LogEvent logEvent, string renderedMessage)
+        /// <param name="formatProvider">The format provider.</param>
+        /// <param name="telemetry">The telemetry itself.</param>
+        /// <param name="telemetryProperties">The <paramref name="telemetry"/> properties.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="logEvent" />, <paramref name="formatProvider" />, <paramref name="telemetry" /> or <paramref name="telemetryProperties" /> is null.</exception>
+        protected void ForwardLogEventDataToTelemetry(LogEvent logEvent, IFormatProvider formatProvider, ITelemetry telemetry, ISupportProperties telemetryProperties)
         {
-            telemetry.Properties.Add("LogLevel", logEvent.Level.ToString());
-            telemetry.Properties.Add("MessageTemplate", logEvent.MessageTemplate.Text);
-            telemetry.Properties.Add("RenderedMessage", renderedMessage);
+            if (logEvent == null) throw new ArgumentNullException("logEvent");
+            if (telemetry == null) throw new ArgumentNullException("telemetry");
+            if (telemetryProperties == null) throw new ArgumentNullException("telemetryProperties");
+            if (formatProvider == null) throw new ArgumentNullException("formatProvider");
 
-            foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetry.Properties.ContainsKey(property.Key)))
+            try
             {
-                ApplicationInsightsPropertyFormatter.WriteValue(property.Key, property.Value, telemetry.Properties);
+                LogEventDataToTelemetryForwarder.Invoke(logEvent, formatProvider, telemetry, telemetryProperties);
+            }
+            catch (TargetInvocationException targetInvocationException)
+            {
+                // rethrow original exception (inside the TargetInvocationException)
+                ExceptionDispatchInfo.Capture(targetInvocationException).Throw();
+            }
+        }
+
+
+        /// <summary>
+        /// Default <see cref="LogEvent"/> data forwarder to the <paramref name="telemetry"/> and its <paramref name="telemetryProperties"/>.
+        /// This forwards the the log level, rendered message, message template and all <paramref name="logEvent"/> properties to the telemetry.
+        /// </summary>
+        /// <param name="logEvent">The log event.</param>
+        /// <param name="formatProvider">The format provider.</param>
+        /// <param name="telemetry">The telemetry itself.</param>
+        /// <param name="telemetryProperties">The telemetry properties.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="logEvent" />, <paramref name="formatProvider" />, <paramref name="telemetry" /> or <paramref name="telemetryProperties" /> is null.</exception>
+        protected virtual void DefaultLogEventDataToTelemetryForwarder(LogEvent logEvent, IFormatProvider formatProvider, ITelemetry telemetry, ISupportProperties telemetryProperties)
+        {
+            if (logEvent == null) throw new ArgumentNullException("logEvent");
+            if (telemetry == null) throw new ArgumentNullException("telemetry");
+            if (telemetryProperties == null) throw new ArgumentNullException("telemetryProperties");
+            if (formatProvider == null) throw new ArgumentNullException("formatProvider");
+
+            var renderedMessage = logEvent.RenderMessage(formatProvider);
+
+            telemetryProperties.Properties.Add(TelemetryPropertiesLogLevel, logEvent.Level.ToString());
+            telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
+            telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, renderedMessage);
+
+            foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))
+            {
+                ApplicationInsightsPropertyFormatter.WriteValue(property.Key, property.Value, telemetryProperties.Properties);
             }
         }
 
