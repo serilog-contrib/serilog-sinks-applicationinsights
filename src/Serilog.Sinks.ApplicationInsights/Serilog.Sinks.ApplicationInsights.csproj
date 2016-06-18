@@ -64,6 +64,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExtensionMethods\LogEventExtensions.cs" />
     <Compile Include="LoggerConfigurationApplicationInsightsExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\..\assets\CommonAssemblyInfo.cs">
@@ -72,6 +73,7 @@
     <Compile Include="Sinks\ApplicationInsights\ApplicationInsightsEventsSink.cs" />
     <Compile Include="Sinks\ApplicationInsights\ApplicationInsightsPropertyFormatter.cs" />
     <Compile Include="Sinks\ApplicationInsights\ApplicationInsightsSink.cs" />
+    <Compile Include="Sinks\ApplicationInsights\ApplicationInsightsSinkBase.cs" />
     <Compile Include="Sinks\ApplicationInsights\ApplicationInsightsTracesSink.cs" />
     <Compile Include="Sinks\ApplicationInsights\LogEventLevelExtensions.cs" />
   </ItemGroup>

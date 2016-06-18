@@ -17,78 +17,47 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
+using Serilog.ExtensionMethods;
 
 namespace Serilog.Sinks.ApplicationInsights
 {
     /// <summary>
     /// Writes log events as Traces to a Microsoft Azure Application Insights account.
     /// </summary>
-    public class ApplicationInsightsTracesSink : ApplicationInsightsSink
+    public class ApplicationInsightsTracesSink : ApplicationInsightsSinkBase
     {
         /// <summary>
         /// Creates a sink that saves logs as Traces to the Application Insights account for the given <paramref name="telemetryClient" /> instance.
         /// </summary>
         /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient" />.</param>
         /// <param name="formatProvider">Supplies culture-specific formatting information, or null for default provider.</param>
-        /// <param name="logEventDataToTelemetryForwarder">The <see cref="LogEvent" /> data to AI <see cref="ITelemetry" /> forwarder
-        /// provides control over what data of each <see cref="LogEvent" /> is sent to Application Insights, particularly the Message itself but also Properties.
-        /// If none is provided, all properties are sent to AI (albeit flattened).</param>
+        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.</param>
         /// <exception cref="System.ArgumentNullException">telemetryClient</exception>
         /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> is <see langword="null" />.</exception>
         public ApplicationInsightsTracesSink(
             TelemetryClient telemetryClient,
             IFormatProvider formatProvider = null,
-            Action<LogEvent, IFormatProvider, ITelemetry, ISupportProperties> logEventDataToTelemetryForwarder = null)
-            : base(telemetryClient, formatProvider, logEventDataToTelemetryForwarder)
+            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
+            : base(telemetryClient, logEventToTelemetryConverter ?? DefaultLogEventToTraceTelemetryConverter, formatProvider)
         {
-            if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
+            if (telemetryClient == null)
+                throw new ArgumentNullException("telemetryClient");
         }
 
         /// <summary>
-        /// Emits the provided <paramref name="logEvent"/> to AI as an <see cref="TraceTelemetry"/>.
+        /// Emits the provided <paramref name="logEvent" /> to AI as an <see cref="EventTelemetry" />.
         /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="logEvent"/> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentException"><paramref name="logEvent"/> must have a <see cref="LogEvent.Exception"/>.</exception>
-        private void TrackAsTrace(LogEvent logEvent)
+        /// <param name="logEvent">The log event.</param>
+        /// <param name="formatProvider">The format provider.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">logEvent</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
+        private static ITelemetry DefaultLogEventToTraceTelemetryConverter(LogEvent logEvent, IFormatProvider formatProvider)
         {
-            if (logEvent == null) throw new ArgumentNullException("logEvent");
+            if (logEvent == null)
+                throw new ArgumentNullException("logEvent");
 
-            CheckForAndThrowIfDisposed();
-
-            var renderedMessage = logEvent.RenderMessage(FormatProvider);
-
-            var traceTelemetry = new TraceTelemetry(renderedMessage)
-            {
-                Timestamp = logEvent.Timestamp,
-                SeverityLevel = logEvent.Level.ToSeverityLevel()
-            };
-
-            // write logEvent's .Properties to the AI one
-            ForwardLogEventDataToTelemetry(logEvent, FormatProvider, traceTelemetry, traceTelemetry);
-
-            TelemetryClient.TrackTrace(traceTelemetry);
+            return logEvent.ToDefaultTraceTelemetry(formatProvider);
         }
-
-        #region Overrides of ApplicationInsightsSink
-
-        /// <summary>
-        /// Emit the provided log event to the sink.
-        /// </summary>
-        /// <param name="logEvent">The log event to write.</param>
-        public override void Emit(LogEvent logEvent)
-        {
-            CheckForAndThrowIfDisposed();
-
-            if (logEvent.Exception != null)
-            {
-                TrackAsException(logEvent);
-            }
-            else
-            {
-                TrackAsTrace(logEvent);
-            }
-        }
-
-        #endregion
     }
 }
