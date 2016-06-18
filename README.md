@@ -24,7 +24,27 @@ var log = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-`LogEvent` instances that have Exceptions are always sent as Exceptions to AI though.
+`LogEvent` instances that have Exceptions are always sent as Exceptions to AI though... well, by default.
+
+
+You can completely customize the type(s) of Telemetry to send for each LogEvent instance and thereby also what to send (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
+
+```csharp
+var log = new LoggerConfiguration()
+    .WriteTo
+	.ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", LogEventsToMetricTelemetryConverter)
+    .CreateLogger();
+
+// ....
+
+private static ITelemetry LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider)
+{
+    var metricTelemetry = new MetricTelemetry(/* ...*/);
+    // forward properties from logEvent or ignore them altogether...
+    return metricTelemetry;
+}
+
+```
 
 * [Serilog Documentation](https://github.com/serilog/serilog/wiki)
 
