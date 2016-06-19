@@ -57,7 +57,14 @@ namespace Serilog.Sinks.ApplicationInsights
             if (logEvent == null)
                 throw new ArgumentNullException("logEvent");
 
-            return logEvent.ToDefaultTraceTelemetry(formatProvider);
+            if (logEvent.Exception == null)
+            {
+                return logEvent.ToDefaultTraceTelemetry(formatProvider);
+            }
+            else
+            {
+                return logEvent.ToDefaultExceptionTelemetry(formatProvider);
+            }
         }
     }
 }

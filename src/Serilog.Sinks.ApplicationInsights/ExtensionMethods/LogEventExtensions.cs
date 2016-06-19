@@ -102,7 +102,7 @@ namespace Serilog.ExtensionMethods
         /// <returns>An <see cref="ExceptionTelemetry"/> for the <paramref name="logEvent"/></returns>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
         /// <exception cref="ArgumentException"><paramref name="logEvent" /> must have a <see cref="LogEvent.Exception" />.</exception>
-        public static ITelemetry ToDefaultExceptionTelemetry(
+        public static ExceptionTelemetry ToDefaultExceptionTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
             bool includeLogLevelAsProperty = true,
@@ -141,11 +141,9 @@ namespace Serilog.ExtensionMethods
         /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesRenderedMessage"/> key.</param>
         /// <param name="includeMessageTemplateAsProperty">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
         /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
-        /// <returns>An <see cref="EventTelemetry"/> for the <paramref name="logEvent"/> unless the <paramref name="logEvent"/>
-        /// has an Exeption, then a <see cref="ExceptionTelemetry"/> will be returned.</returns>
+        /// <returns>An <see cref="EventTelemetry"/> for the <paramref name="logEvent"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentException"><paramref name="logEvent" /> must have a <see cref="LogEvent.Exception" />.</exception>
-        public static ITelemetry ToDefaultEventTelemetry(
+        public static EventTelemetry ToDefaultEventTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
             bool includeLogLevelAsProperty = true,
@@ -154,22 +152,15 @@ namespace Serilog.ExtensionMethods
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
 
-            if (logEvent.Exception != null)
+            var telemetry = new EventTelemetry(logEvent.MessageTemplate.Text)
             {
-                return logEvent.ToDefaultExceptionTelemetry(formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
-            }
-            else
-            {
-                var telemetry = new EventTelemetry(logEvent.MessageTemplate.Text)
-                {
-                    Timestamp = logEvent.Timestamp
-                };
+                Timestamp = logEvent.Timestamp
+            };
 
-                // write logEvent's .Properties to the AI one
-                logEvent.ForwardPropertiesToTelemetryProperties(telemetry, formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
+            // write logEvent's .Properties to the AI one
+            logEvent.ForwardPropertiesToTelemetryProperties(telemetry, formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
 
-                return telemetry;
-            }
+            return telemetry;
         }
 
         /// <summary>
@@ -183,11 +174,9 @@ namespace Serilog.ExtensionMethods
         /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesRenderedMessage"/> key.</param>
         /// <param name="includeMessageTemplateAsProperty">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
         /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
-        /// <returns>An <see cref="TraceTelemetry"/> for the <paramref name="logEvent"/> unless the <paramref name="logEvent"/>
-        /// has an Exeption, then a <see cref="ExceptionTelemetry"/> will be returned.</returns>
+        /// <returns>An <see cref="TraceTelemetry"/> for the <paramref name="logEvent"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentException"><paramref name="logEvent" /> must have a <see cref="LogEvent.Exception" />.</exception>
-        public static ITelemetry ToDefaultTraceTelemetry(
+        public static TraceTelemetry ToDefaultTraceTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
             bool includeLogLevelAsProperty = true,
@@ -196,25 +185,18 @@ namespace Serilog.ExtensionMethods
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
 
-            if (logEvent.Exception != null)
+            var renderedMessage = logEvent.RenderMessage(formatProvider);
+
+            var telemetry = new TraceTelemetry(renderedMessage)
             {
-                return logEvent.ToDefaultExceptionTelemetry(formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
-            }
-            else
-            {
-                var renderedMessage = logEvent.RenderMessage(formatProvider);
+                Timestamp = logEvent.Timestamp,
+                SeverityLevel = logEvent.Level.ToSeverityLevel()
+            };
 
-                var telemetry = new TraceTelemetry(renderedMessage)
-                {
-                    Timestamp = logEvent.Timestamp,
-                    SeverityLevel = logEvent.Level.ToSeverityLevel()
-                };
+            // write logEvent's .Properties to the AI one
+            logEvent.ForwardPropertiesToTelemetryProperties(telemetry, formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
 
-                // write logEvent's .Properties to the AI one
-                logEvent.ForwardPropertiesToTelemetryProperties(telemetry, formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
-
-                return telemetry;
-            }
+            return telemetry;
         }
     }
 }
