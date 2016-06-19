@@ -42,24 +42,45 @@ namespace Serilog.ExtensionMethods
         public const string TelemetryPropertiesRenderedMessage = "RenderedMessage";
 
         /// <summary>
-        /// Forwards all <see cref="LogEvent"/> data to the <paramref name="telemetryProperties"/> including the log level,
-        /// rendered message, message template and all <paramref name="logEvent"/> properties to the telemetry.
+        /// Forwards all <see cref="LogEvent" /> data to the <paramref name="telemetryProperties" /> including the log level,
+        /// rendered message, message template and all <paramref name="logEvent" /> properties to the telemetry.
         /// </summary>
         /// <param name="logEvent">The log event.</param>
-        /// <param name="formatProvider">The format provider.</param>
         /// <param name="telemetryProperties">The telemetry properties.</param>
+        /// <param name="formatProvider">The format provider.</param>
+        /// <param name="includeLogLevel">if set to <c>true</c> the <see cref="LogEvent.Level"/> is added to the
+        /// <paramref name="telemetryProperties"/> using the <see cref="TelemetryPropertiesLogLevel"/> key.</param>
+        /// <param name="includeRenderedMessage">if set to <c>true</c> the <see cref="LogEvent.RenderMessage(System.IFormatProvider)"/> output is added to the
+        /// <paramref name="telemetryProperties"/> using the <see cref="TelemetryPropertiesRenderedMessage"/> key.</param>
+        /// <param name="includeMessageTemplate">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
+        /// <paramref name="telemetryProperties"/> using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
         /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="logEvent" />, <paramref name="telemetryProperties" /> or <paramref name="formatProvider" /> is null.</exception>
-        public static void ForwardAllPropertiesToTelemetryProperties(this LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
+        public static void ForwardPropertiesToTelemetryProperties(this LogEvent logEvent,
+            ISupportProperties telemetryProperties,
+            IFormatProvider formatProvider,
+            bool includeLogLevel = true,
+            bool includeRenderedMessage = true,
+            bool includeMessageTemplate = true)
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
             if (telemetryProperties == null) throw new ArgumentNullException("telemetryProperties");
             if (formatProvider == null) throw new ArgumentNullException("formatProvider");
 
-            var renderedMessage = logEvent.RenderMessage(formatProvider);
+            if (includeLogLevel)
+            {
+                telemetryProperties.Properties.Add(TelemetryPropertiesLogLevel, logEvent.Level.ToString());
+            }
 
-            telemetryProperties.Properties.Add(TelemetryPropertiesLogLevel, logEvent.Level.ToString());
-            telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
-            telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, renderedMessage);
+            if (includeRenderedMessage)
+            {
+                telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, logEvent.RenderMessage(formatProvider));
+            }
+
+            if (includeMessageTemplate)
+            {
+                telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
+            }
+            
 
             foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))
             {
@@ -72,12 +93,21 @@ namespace Serilog.ExtensionMethods
         /// </summary>
         /// <param name="logEvent">The log event.</param>
         /// <param name="formatProvider">The format provider.</param>
+        /// <param name="includeLogLevelAsProperty">if set to <c>true</c> the <see cref="LogEvent.Level"/> is added to the
+        /// created <see cref="ExceptionTelemetry.Properties"/> using the <see cref="TelemetryPropertiesLogLevel"/> key.</param>
+        /// <param name="includeRenderedMessageAsProperty">if set to <c>true</c> the <see cref="LogEvent.RenderMessage(System.IFormatProvider)"/> output is added to the
+        /// created <see  cref="ExceptionTelemetry.Properties"/> using the <see cref="TelemetryPropertiesRenderedMessage"/> key.</param>
+        /// <param name="includeMessageTemplateAsProperty">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
+        /// created <see cref="ExceptionTelemetry.Properties"/> using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
         /// <returns>An <see cref="ExceptionTelemetry"/> for the <paramref name="logEvent"/></returns>
-        /// <exception cref="System.ArgumentNullException">logEvent</exception>
-        /// <exception cref="System.ArgumentException">Must have an Exception;logEvent</exception>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
         /// <exception cref="ArgumentException"><paramref name="logEvent" /> must have a <see cref="LogEvent.Exception" />.</exception>
-        public static ITelemetry ToDefaultExceptionTelemetry(this LogEvent logEvent, IFormatProvider formatProvider)
+        public static ITelemetry ToDefaultExceptionTelemetry(
+            this LogEvent logEvent,
+            IFormatProvider formatProvider,
+            bool includeLogLevelAsProperty = true,
+            bool includeRenderedMessageAsProperty = true,
+            bool includeMessageTemplateAsProperty = true)
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
             if (logEvent.Exception == null) throw new ArgumentException("Must have an Exception", "logEvent");
@@ -90,7 +120,13 @@ namespace Serilog.ExtensionMethods
             };
 
             // write logEvent's .Properties to the AI one
-            logEvent.ForwardAllPropertiesToTelemetryProperties(exceptionTelemetry, formatProvider);
+            logEvent.ForwardPropertiesToTelemetryProperties(
+                exceptionTelemetry,
+                formatProvider,
+                includeLogLevelAsProperty,
+                includeRenderedMessageAsProperty,
+                includeMessageTemplateAsProperty);
+
             return exceptionTelemetry;
         }
 
@@ -99,29 +135,40 @@ namespace Serilog.ExtensionMethods
         /// </summary>
         /// <param name="logEvent">The log event.</param>
         /// <param name="formatProvider">The format provider.</param>
+        /// <param name="includeLogLevelAsProperty">if set to <c>true</c> the <see cref="LogEvent.Level"/> is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesLogLevel"/> key.</param>
+        /// <param name="includeRenderedMessageAsProperty">if set to <c>true</c> the <see cref="LogEvent.RenderMessage(System.IFormatProvider)"/> output is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesRenderedMessage"/> key.</param>
+        /// <param name="includeMessageTemplateAsProperty">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
         /// <returns>An <see cref="EventTelemetry"/> for the <paramref name="logEvent"/> unless the <paramref name="logEvent"/>
         /// has an Exeption, then a <see cref="ExceptionTelemetry"/> will be returned.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
         /// <exception cref="ArgumentException"><paramref name="logEvent" /> must have a <see cref="LogEvent.Exception" />.</exception>
-        public static ITelemetry ToDefaultEventTelemetry(this LogEvent logEvent, IFormatProvider formatProvider)
+        public static ITelemetry ToDefaultEventTelemetry(
+            this LogEvent logEvent,
+            IFormatProvider formatProvider,
+            bool includeLogLevelAsProperty = true,
+            bool includeRenderedMessageAsProperty = true,
+            bool includeMessageTemplateAsProperty = true)
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
 
             if (logEvent.Exception != null)
             {
-                return logEvent.ToDefaultExceptionTelemetry(formatProvider);
+                return logEvent.ToDefaultExceptionTelemetry(formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
             }
             else
             {
-                var eventTelemetry = new EventTelemetry(logEvent.MessageTemplate.Text)
+                var telemetry = new EventTelemetry(logEvent.MessageTemplate.Text)
                 {
                     Timestamp = logEvent.Timestamp
                 };
 
                 // write logEvent's .Properties to the AI one
-                logEvent.ForwardAllPropertiesToTelemetryProperties(eventTelemetry, formatProvider);
+                logEvent.ForwardPropertiesToTelemetryProperties(telemetry, formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
 
-                return eventTelemetry;
+                return telemetry;
             }
         }
 
@@ -130,32 +177,43 @@ namespace Serilog.ExtensionMethods
         /// </summary>
         /// <param name="logEvent">The log event.</param>
         /// <param name="formatProvider">The format provider.</param>
+        /// <param name="includeLogLevelAsProperty">if set to <c>true</c> the <see cref="LogEvent.Level"/> is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesLogLevel"/> key.</param>
+        /// <param name="includeRenderedMessageAsProperty">if set to <c>true</c> the <see cref="LogEvent.RenderMessage(System.IFormatProvider)"/> output is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesRenderedMessage"/> key.</param>
+        /// <param name="includeMessageTemplateAsProperty">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
         /// <returns>An <see cref="TraceTelemetry"/> for the <paramref name="logEvent"/> unless the <paramref name="logEvent"/>
         /// has an Exeption, then a <see cref="ExceptionTelemetry"/> will be returned.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
         /// <exception cref="ArgumentException"><paramref name="logEvent" /> must have a <see cref="LogEvent.Exception" />.</exception>
-        public static ITelemetry ToDefaultTraceTelemetry(this LogEvent logEvent, IFormatProvider formatProvider)
+        public static ITelemetry ToDefaultTraceTelemetry(
+            this LogEvent logEvent,
+            IFormatProvider formatProvider,
+            bool includeLogLevelAsProperty = true,
+            bool includeRenderedMessageAsProperty = false,
+            bool includeMessageTemplateAsProperty = true)
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
 
             if (logEvent.Exception != null)
             {
-                return logEvent.ToDefaultExceptionTelemetry(formatProvider);
+                return logEvent.ToDefaultExceptionTelemetry(formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
             }
             else
             {
                 var renderedMessage = logEvent.RenderMessage(formatProvider);
 
-                var traceTelemetry = new TraceTelemetry(renderedMessage)
+                var telemetry = new TraceTelemetry(renderedMessage)
                 {
                     Timestamp = logEvent.Timestamp,
                     SeverityLevel = logEvent.Level.ToSeverityLevel()
                 };
 
                 // write logEvent's .Properties to the AI one
-                logEvent.ForwardAllPropertiesToTelemetryProperties(traceTelemetry, formatProvider);
+                logEvent.ForwardPropertiesToTelemetryProperties(telemetry, formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
 
-                return traceTelemetry;
+                return telemetry;
             }
         }
     }
