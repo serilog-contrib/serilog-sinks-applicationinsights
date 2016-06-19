@@ -24,7 +24,67 @@ var log = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-`LogEvent` instances that have Exceptions are always sent as Exceptions to AI though.
+`LogEvent` instances that have Exceptions are always sent as Exceptions to AI though... well, by default.
+
+
+You can customize completely the type(s) of Telemetry to send for each LogEvent instance and also / or what to send (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
+
+```csharp
+var log = new LoggerConfiguration()
+    .WriteTo
+	.ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", LogEventsToMetricTelemetryConverter)
+    .CreateLogger();
+
+// ....
+
+private static ITelemetry LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider)
+{
+    var metricTelemetry = new MetricTelemetry(/* ...*/);
+    // forward properties from logEvent or ignore them altogether...
+    return metricTelemetry;
+}
+
+```
+
+
+.. or alternatively by using the built-in, default TraceTelemetry generation logic, but adapt the Telemetry's Context to include a UserId:
+
+
+```csharp
+public static void Main()
+{
+    var log = new LoggerConfiguration()
+        .WriteTo
+        .ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", ConvertLogEventsToCustomTraceTelemetry)
+        .CreateLogger();
+}
+
+private static ITelemetry ConvertLogEventsToCustomTraceTelemetry(LogEvent logEvent, IFormatProvider formatProvider)
+{
+    // first create a default TraceTelemetry using the sink's default logic
+    // .. but without the log level, and (rendered) message (template) included in the Properties
+    var telemetry = logEvent.ToDefaultTraceTelemetry(
+        formatProvider,
+        includeLogLevelAsProperty: false,
+        includeRenderedMessageAsProperty: false,
+        includeMessageTemplateAsProperty: false);
+
+    // then go ahead and post-process the telemetry's context to contain the user id as desired
+    if (logEvent.Properties.ContainsKey("UserId"))
+    {
+        telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
+    }
+
+    // and remove the UserId from the Telemetry .Properties (we don't need redundancies)
+    if (telemetry.Properties.ContainsKey("UserId"))
+    {
+        telemetry.Properties.Remove("UserId");
+    }
+	
+    return telemetry;
+}
+```
+
 
 * [Serilog Documentation](https://github.com/serilog/serilog/wiki)
 

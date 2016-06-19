@@ -6,7 +6,7 @@
     <authors>Joerg Battermann</authors>
     <description>Serilog event sink that writes Microsoft Application Insights.</description>
     <language>en-US</language>
-    <releaseNotes>Updated ApplicationInsights to 2.0 and added functionality to send LogEvents as a specific AI Telemetry type: Event(s) or Trace(s).</releaseNotes>
+    <releaseNotes>Users / Developers can now fully customize how and what data is sent by allowing them to construct their own ITelemetry instances for every LogEvent (see Readme.md).</releaseNotes>
     <projectUrl>http://serilog.net</projectUrl>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <iconUrl>http://serilog.net/images/serilog-sink-nuget.png</iconUrl>
