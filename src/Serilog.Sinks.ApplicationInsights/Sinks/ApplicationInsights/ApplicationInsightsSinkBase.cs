@@ -145,64 +145,15 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </summary>
         /// <param name="telemetry">The telemetry.</param>
         /// <exception cref="System.ArgumentNullException">telemetry</exception>
-        /// <exception cref="System.ArgumentException">This kind of telemetry is not supported, yet;telemetry</exception>
         protected virtual void TrackTelemetry(ITelemetry telemetry)
         {
             if (telemetry == null) throw new ArgumentNullException("telemetry");
 
             CheckForAndThrowIfDisposed();
 
-            var dependencyTelemetry = telemetry as DependencyTelemetry;
-            if (dependencyTelemetry != null)
-            {
-                TelemetryClient.TrackDependency(dependencyTelemetry);
-                return;
-            }
-
-            var eventTelemetry = telemetry as EventTelemetry;
-            if (eventTelemetry != null)
-            {
-                TelemetryClient.TrackEvent(eventTelemetry);
-                return;
-            }
-
-            var exceptionTelemetry = telemetry as ExceptionTelemetry;
-            if (exceptionTelemetry != null)
-            {
-                TelemetryClient.TrackException(exceptionTelemetry);
-                return;
-            }
-
-            var metricTelemetry = telemetry as MetricTelemetry;
-            if (metricTelemetry != null)
-            {
-                TelemetryClient.TrackMetric(metricTelemetry);
-                return;
-            }
-
-            var pageViewTelemetry = telemetry as PageViewTelemetry;
-            if (pageViewTelemetry != null)
-            {
-                TelemetryClient.TrackPageView(pageViewTelemetry);
-                return;
-            }
-
-            var requestTelemetry = telemetry as RequestTelemetry;
-            if (requestTelemetry != null)
-            {
-                TelemetryClient.TrackRequest(requestTelemetry);
-                return;
-            }
-
-            var traceTelemetry = telemetry as TraceTelemetry;
-            if (traceTelemetry != null)
-            {
-                TelemetryClient.TrackTrace(traceTelemetry);
-                return;
-            }
-
-            // else
-            throw new ArgumentException("This kind of telemetry is not supported, yet", "telemetry");
+            // the .Track() method is save to use (even though documented otherwise)
+            // see https://github.com/Microsoft/ApplicationInsights-dotnet/issues/244
+            TelemetryClient.Track(telemetry);
         }
 
         #endregion AI specifc Helper methods
@@ -213,6 +164,8 @@ namespace Serilog.Sinks.ApplicationInsights
         /// Emit the provided log event to the sink.
         /// </summary>
         /// <param name="logEvent">The log event to write.</param>
+        /// <exception cref="Exception">A delegate callback throws an exception.</exception>
+        /// <exception cref="TargetInvocationException">A delegate callback throws an exception.</exception>
         public virtual void Emit(LogEvent logEvent)
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
@@ -222,6 +175,8 @@ namespace Serilog.Sinks.ApplicationInsights
             try
             {
                 var telemetry = LogEventToTelemetryConverter.Invoke(logEvent, FormatProvider);
+
+                // if 'null' is returned (& we therefore there's nothing to track), the logEvent is basically skipped
                 if (telemetry != null)
                 {
                     TrackTelemetry(telemetry);
@@ -229,8 +184,15 @@ namespace Serilog.Sinks.ApplicationInsights
             }
             catch (TargetInvocationException targetInvocationException)
             {
-                // rethrow original exception (inside the TargetInvocationException)
-                ExceptionDispatchInfo.Capture(targetInvocationException).Throw();
+                // rethrow original exception (inside the TargetInvocationException) if any
+                if (targetInvocationException.InnerException != null)
+                {
+                    ExceptionDispatchInfo.Capture(targetInvocationException.InnerException).Throw();
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
 

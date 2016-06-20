@@ -4,7 +4,7 @@ A sink for Serilog that writes events to Microsoft Application Insights.
  
 [![Build status](https://ci.appveyor.com/api/projects/status/ccgd7k98kbmifl5v/branch/master?svg=true)](https://ci.appveyor.com/project/serilog/serilog-sinks-applicationinsights/branch/master) [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
 
-This Sink can write Serilog `LogEvent` messages to Application Insights as `EventTelemetry`:
+This Sink comes with two main helper extensions that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry`:
 
 ```csharp
 var log = new LoggerConfiguration()
@@ -24,10 +24,10 @@ var log = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-`LogEvent` instances that have Exceptions are always sent as Exceptions to AI though... well, by default.
+For those two `LogEvent` instances that have Exceptions are always sent as Exceptions to AI though... well, by default.
 
 
-You can customize completely the type(s) of Telemetry to send for each LogEvent instance and also / or what to send (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
+Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
 
 ```csharp
 var log = new LoggerConfiguration()
@@ -85,8 +85,8 @@ private static ITelemetry ConvertLogEventsToCustomTraceTelemetry(LogEvent logEve
 }
 ```
 
+If you want to skip sending a particular LogEvent, just return `null` from your own converter method.
 
-* [Serilog Documentation](https://github.com/serilog/serilog/wiki)
 
 ## How, When and Why to Flush Messages Manually
 
@@ -161,3 +161,5 @@ var log = new LoggerConfiguration()
 ```
 
 Copyright &copy; 2016 Serilog Contributors - Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
+
+See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)
