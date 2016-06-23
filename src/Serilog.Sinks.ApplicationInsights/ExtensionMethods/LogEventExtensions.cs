@@ -54,7 +54,7 @@ namespace Serilog.ExtensionMethods
         /// <paramref name="telemetryProperties"/> using the <see cref="TelemetryPropertiesRenderedMessage"/> key.</param>
         /// <param name="includeMessageTemplate">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
         /// <paramref name="telemetryProperties"/> using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="logEvent" />, <paramref name="telemetryProperties" /> or <paramref name="formatProvider" /> is null.</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="logEvent" /> or <paramref name="telemetryProperties" /> is null.</exception>
         public static void ForwardPropertiesToTelemetryProperties(this LogEvent logEvent,
             ISupportProperties telemetryProperties,
             IFormatProvider formatProvider,
@@ -64,7 +64,6 @@ namespace Serilog.ExtensionMethods
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
             if (telemetryProperties == null) throw new ArgumentNullException("telemetryProperties");
-            if (formatProvider == null) throw new ArgumentNullException("formatProvider");
 
             if (includeLogLevel)
             {
