@@ -1,0 +1,16 @@
+﻿{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "Serilog": "2.0.0",
+    "Microsoft.ApplicationInsights": "2.0.0" 
+  },
+
+  "frameworks": {
+    "netstandard1.3": {
+      "imports": [
+        "dotnet5.4"
+      ]
+    }
+  }
+}
