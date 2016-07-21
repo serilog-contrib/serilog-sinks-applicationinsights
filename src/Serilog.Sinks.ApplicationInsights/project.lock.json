@@ -2,6 +2,26 @@
   "locked": false,
   "version": 2,
   "targets": {
+    ".NETFramework,Version=v4.5": {
+      "Microsoft.ApplicationInsights/2.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Microsoft.ApplicationInsights.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Microsoft.ApplicationInsights.dll": {}
+        }
+      },
+      "Serilog/2.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Serilog.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Serilog.dll": {}
+        }
+      }
+    },
     ".NETStandard,Version=v1.3": {
       "Microsoft.ApplicationInsights/2.0.0": {
         "type": "package",
@@ -2491,6 +2511,7 @@
       "Microsoft.ApplicationInsights >= 2.0.0",
       "Serilog >= 2.0.0"
     ],
+    ".NETFramework,Version=v4.5": [],
     ".NETStandard,Version=v1.3": []
   },
   "tools": {},
