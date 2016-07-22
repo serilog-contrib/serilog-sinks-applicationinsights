@@ -26,26 +26,4 @@ foreach ($src in ls src/*) {
     Pop-Location
 }
 
-foreach ($test in ls test/*.PerformanceTests) {
-    Push-Location $test
-
-	echo "build: Building performance test project in $test"
-
-    & dotnet build -c Release
-    if($LASTEXITCODE -ne 0) { exit 2 }
-
-    Pop-Location
-}
-
-foreach ($test in ls test/*.Tests) {
-    Push-Location $test
-
-	echo "build: Testing project in $test"
-
-    & dotnet test -c Release
-    if($LASTEXITCODE -ne 0) { exit 3 }
-
-    Pop-Location
-}
-
 Pop-Location
