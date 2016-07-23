@@ -1,73 +1,29 @@
-param(
-    [String] $majorMinor = "0.0",  # 2.0
-    [String] $patch = "0",         # $env:APPVEYOR_BUILD_VERSION
-    [String] $customLogger = "",   # C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll
-    [Switch] $notouch
-)
+echo "build: Build started"
 
-function Set-AssemblyVersions($informational, $assembly)
-{
-    (Get-Content assets/CommonAssemblyInfo.cs) |
-        ForEach-Object { $_ -replace """1.0.0.0""", """$assembly""" } |
-        ForEach-Object { $_ -replace """1.0.0""", """$informational""" } |
-        ForEach-Object { $_ -replace """1.1.1.1""", """$($informational).0""" } |
-        Set-Content assets/CommonAssemblyInfo.cs
+Push-Location $PSScriptRoot
+
+if(Test-Path .\artifacts) {
+	echo "build: Cleaning .\artifacts"
+	Remove-Item .\artifacts -Force -Recurse
 }
 
-function Install-NuGetPackages()
-{
-    nuget restore serilog-sinks-applicationinsights.sln
+& dotnet restore --no-cache
+
+$branch = @{ $true = $env:APPVEYOR_REPO_BRANCH; $false = $(git symbolic-ref --short -q HEAD) }[$env:APPVEYOR_REPO_BRANCH -ne $NULL];
+$revision = @{ $true = "{0:00000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10); $false = "local" }[$env:APPVEYOR_BUILD_NUMBER -ne $NULL];
+$suffix = @{ $true = ""; $false = "$($branch.Substring(0, [math]::Min(10,$branch.Length)))-$revision"}[$branch -eq "master" -and $revision -ne "local"]
+
+echo "build: Version suffix is $suffix"
+
+foreach ($src in ls src/*) {
+    Push-Location $src
+
+	echo "build: Packaging project in $src"
+
+    & dotnet pack -c Release -o ..\..\artifacts --version-suffix=$suffix
+    if($LASTEXITCODE -ne 0) { exit 1 }    
+
+    Pop-Location
 }
 
-function Invoke-MSBuild($solution, $customLogger)
-{
-    if ($customLogger)
-    {
-        msbuild "$solution" /verbosity:minimal /p:Configuration=Release /logger:"$customLogger"
-    }
-    else
-    {
-        msbuild "$solution" /verbosity:minimal /p:Configuration=Release
-    }
-}
-
-function Invoke-NuGetPackProj($csproj)
-{
-    nuget pack -Prop Configuration=Release -Symbols $csproj
-}
-
-function Invoke-NuGetPackSpec($nuspec, $version)
-{
-    nuget pack $nuspec -Version $version -OutputDirectory ..\..\
-}
-
-function Invoke-NuGetPack($version)
-{
-    ls src/**/*.csproj |
-        Where-Object { -not ($_.Name -like "*net40*") } |
-        ForEach-Object { Invoke-NuGetPackProj $_ }
-}
-
-function Invoke-Build($majorMinor, $patch, $customLogger, $notouch)
-{
-    $package="$majorMinor.$patch"
-
-    Write-Output "Building Serilog.Sinks.ApplicationInsights $package"
-
-    if (-not $notouch)
-    {
-        $assembly = "$majorMinor.0.0"
-
-        Write-Output "Assembly version will be set to $assembly"
-        Set-AssemblyVersions $package $assembly
-    }
-
-    Install-NuGetPackages
-    
-    Invoke-MSBuild "serilog-sinks-applicationinsights.sln" $customLogger
-
-    Invoke-NuGetPack $package
-}
-
-$ErrorActionPreference = "Stop"
-Invoke-Build $majorMinor $patch $customLogger $notouch
+Pop-Location
