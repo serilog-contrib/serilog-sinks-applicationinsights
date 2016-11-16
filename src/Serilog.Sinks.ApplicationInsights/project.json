@@ -19,5 +19,8 @@
         "dotnet5.4"
       ]
     }
+  },
+  "buildOptions": {
+    "keyFile": "../../assets/Serilog.snk"
   }
 }
