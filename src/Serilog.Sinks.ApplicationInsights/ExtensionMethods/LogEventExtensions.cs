@@ -114,7 +114,6 @@ namespace Serilog.ExtensionMethods
             var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
             {
                 SeverityLevel = logEvent.Level.ToSeverityLevel(),
-                HandledAt = ExceptionHandledAt.UserCode,
                 Timestamp = logEvent.Timestamp
             };
 
