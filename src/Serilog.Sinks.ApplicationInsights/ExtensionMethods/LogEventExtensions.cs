@@ -79,7 +79,6 @@ namespace Serilog.ExtensionMethods
             {
                 telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
             }
-            
 
             foreach (var property in logEvent.Properties.Where(property => property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))
             {
@@ -110,11 +109,13 @@ namespace Serilog.ExtensionMethods
         {
             if (logEvent == null) throw new ArgumentNullException("logEvent");
             if (logEvent.Exception == null) throw new ArgumentException("Must have an Exception", "logEvent");
-            
+
             var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
             {
                 SeverityLevel = logEvent.Level.ToSeverityLevel(),
+#if EXCEPTION_TELEMETRY_HANDLED_AT
                 HandledAt = ExceptionHandledAt.UserCode,
+#endif
                 Timestamp = logEvent.Timestamp
             };
 
