@@ -9,18 +9,29 @@
     "iconUrl": "http://serilog.net/images/serilog-sink-nuget.png"
   },
   "dependencies": {
-    "Serilog": "2.0.0",
-    "Microsoft.ApplicationInsights": "2.0.0"
+    "Serilog": "2.0.0"
   },
   "frameworks": {
-    "net45": { },
+    "net45": {
+      "dependencies": {
+        "Microsoft.ApplicationInsights": "2.0.0"
+      }
+    },
     "netstandard1.3": {
+      "dependencies": {
+        "Microsoft.ApplicationInsights": "2.0.0"
+      },
       "imports": [
         "dotnet5.4"
       ]
+    },
+    "netstandard1.6": {
+        "dependencies": {
+          "Microsoft.ApplicationInsights.AspNetCore": "2.0.0"
+        }
+      }
+    },
+    "buildOptions": {
+      "keyFile": "../../assets/Serilog.snk"
     }
-  },
-  "buildOptions": {
-    "keyFile": "../../assets/Serilog.snk"
   }
-}
