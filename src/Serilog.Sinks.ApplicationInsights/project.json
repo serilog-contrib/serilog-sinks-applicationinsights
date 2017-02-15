@@ -15,12 +15,14 @@
     "net45": {
       "dependencies": {
         "Microsoft.ApplicationInsights": "2.0.0"
-      }
+      },
+      "buildOptions": { "define": [ "EXCEPTION_TELEMETRY_HANDLED_AT" ] }
     },
     "netstandard1.3": {
       "dependencies": {
         "Microsoft.ApplicationInsights": "2.0.0"
       },
+      "buildOptions": { "define": [ "EXCEPTION_TELEMETRY_HANDLED_AT" ] },
       "imports": [
         "dotnet5.4"
       ]
