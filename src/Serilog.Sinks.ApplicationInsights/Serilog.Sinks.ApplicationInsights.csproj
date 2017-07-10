@@ -25,13 +25,13 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.2.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.4.0" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.2.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.4.0" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
@@ -39,7 +39,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.0" />
   </ItemGroup>
 
 </Project>
