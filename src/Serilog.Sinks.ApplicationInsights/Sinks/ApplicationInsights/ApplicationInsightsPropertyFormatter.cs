@@ -63,7 +63,7 @@ namespace Serilog.Sinks.ApplicationInsights
         {
             if (propDictionary.ContainsKey(key))
             {
-                SelfLog.WriteLine("The key {0} is not unique after simplification. Ingoring new value {1}", key, value);
+                SelfLog.WriteLine("The key {0} is not unique after simplification. Ignoring new value {1}", key, value);
                 return;
             }
             propDictionary.Add(key, value);
