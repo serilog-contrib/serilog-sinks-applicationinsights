@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>Serilog event sink that writes Microsoft Application Insights.</Description>
-    <VersionPrefix>2.2.1</VersionPrefix>
+    <VersionPrefix>2.2.2</VersionPrefix>
     <Authors>Joerg Battermann</Authors>
     <TargetFrameworks>net45;netstandard1.3;netstandard1.6</TargetFrameworks>
     <AssemblyName>Serilog.Sinks.ApplicationInsights</AssemblyName>
