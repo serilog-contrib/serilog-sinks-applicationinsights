@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Serilog event sink that writes Microsoft Application Insights.</Description>
+    <Description>Serilog event sink that writes to Microsoft Application Insights.</Description>
     <VersionPrefix>2.2.2</VersionPrefix>
     <Authors>Joerg Battermann</Authors>
     <TargetFrameworks>net45;netstandard1.3;netstandard1.6</TargetFrameworks>
