@@ -45,14 +45,8 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </value>
         public bool IsDisposing
         {
-            get
-            {
-                return Interlocked.Read(ref _isDisposing) == 1;
-            }
-            protected set
-            {
-                Interlocked.Exchange(ref _isDisposing, value ? 1 : 0);
-            }
+            get => Interlocked.Read(ref _isDisposing) == 1;
+            protected set => Interlocked.Exchange(ref _isDisposing, value ? 1 : 0);
         }
 
         /// <summary>
@@ -63,14 +57,8 @@ namespace Serilog.Sinks.ApplicationInsights
         /// </value>
         public bool IsDisposed
         {
-            get
-            {
-                return Interlocked.Read(ref _isDisposed) == 1;
-            }
-            protected set
-            {
-                Interlocked.Exchange(ref _isDisposed, value ? 1 : 0);
-            }
+            get => Interlocked.Read(ref _isDisposed) == 1;
+            protected set => Interlocked.Exchange(ref _isDisposed, value ? 1 : 0);
         }
 
         /// <summary>
@@ -130,12 +118,10 @@ namespace Serilog.Sinks.ApplicationInsights
             Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
             IFormatProvider formatProvider = null)
         {
-            if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
-            if (logEventToTelemetryConverter == null) throw new ArgumentNullException("logEventToTelemetryConverter");
+            _telemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
+            _logEventToTelemetryConverter = logEventToTelemetryConverter ?? throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
 
-            _telemetryClient = telemetryClient;
             _formatProvider = formatProvider;
-            _logEventToTelemetryConverter = logEventToTelemetryConverter;
         }
 
         #region AI specifc Helper methods
@@ -238,18 +224,11 @@ namespace Serilog.Sinks.ApplicationInsights
                 if (disposeManagedResources)
                 {
                     // free managed resources
-                    if (TelemetryClient != null)
-                    {
-                        TelemetryClient.Flush();
-                    }
+                    _telemetryClient?.Flush();
                 }
-
-                // no unmanaged resources are to be disposed
             }
             finally
             {
-                // but the flags need to be set in either case
-
                 IsDisposed = true;
                 IsDisposing = false;
             }
