@@ -24,8 +24,7 @@ var log = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-For those two `LogEvent` instances that have Exceptions are always sent as Exceptions to AI though... well, by default.
-
+Note: Whether you choose `EventTelemetry` or `TraceTelemetry `, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
 
 Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
 
