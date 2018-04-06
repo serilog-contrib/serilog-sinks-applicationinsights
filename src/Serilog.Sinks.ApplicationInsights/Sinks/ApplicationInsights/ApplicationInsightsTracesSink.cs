@@ -41,7 +41,7 @@ namespace Serilog.Sinks.ApplicationInsights
             : base(telemetryClient, logEventToTelemetryConverter ?? DefaultLogEventToTraceTelemetryConverter, formatProvider)
         {
             if (telemetryClient == null)
-                throw new ArgumentNullException("telemetryClient");
+                throw new ArgumentNullException(nameof(telemetryClient));
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Serilog.Sinks.ApplicationInsights
         private static ITelemetry DefaultLogEventToTraceTelemetryConverter(LogEvent logEvent, IFormatProvider formatProvider)
         {
             if (logEvent == null)
-                throw new ArgumentNullException("logEvent");
+                throw new ArgumentNullException(nameof(logEvent));
 
             if (logEvent.Exception == null)
             {

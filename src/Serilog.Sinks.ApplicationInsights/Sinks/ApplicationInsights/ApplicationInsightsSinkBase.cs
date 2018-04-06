@@ -133,7 +133,7 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <exception cref="System.ArgumentNullException">telemetry</exception>
         protected virtual void TrackTelemetry(ITelemetry telemetry)
         {
-            if (telemetry == null) throw new ArgumentNullException("telemetry");
+            if (telemetry == null) throw new ArgumentNullException(nameof(telemetry));
 
             CheckForAndThrowIfDisposed();
 
@@ -154,7 +154,7 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <exception cref="TargetInvocationException">A delegate callback throws an exception.</exception>
         public virtual void Emit(LogEvent logEvent)
         {
-            if (logEvent == null) throw new ArgumentNullException("logEvent");
+            if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
             CheckForAndThrowIfDisposed();
 
