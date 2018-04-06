@@ -18,7 +18,6 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
-using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -33,9 +32,7 @@ namespace Serilog.Sinks.ApplicationInsights
         private long _isDisposing = 0;
         private long _isDisposed = 0;
 
-        private readonly TelemetryClient _telemetryClient;
-        private readonly IFormatProvider _formatProvider;
-        private readonly Func<LogEvent, IFormatProvider, ITelemetry> _logEventToTelemetryConverter;
+        private TelemetryClient _telemetryClient;
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance is being disposed.
@@ -67,15 +64,7 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <value>
         /// The format provider.
         /// </value>
-        protected IFormatProvider FormatProvider
-        {
-            get
-            {
-                CheckForAndThrowIfDisposed();
-
-                return _formatProvider;
-            }
-        }
+        protected IFormatProvider FormatProvider { get; }
 
         /// <summary>
         /// Gets the <see cref="LogEvent"/> to <see cref="ITelemetry"/> converter.
@@ -83,28 +72,12 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <value>
         /// The log event to telemetry converter.
         /// </value>
-        protected Func<LogEvent, IFormatProvider, ITelemetry> LogEventToTelemetryConverter
-        {
-            get
-            {
-                CheckForAndThrowIfDisposed();
-
-                return _logEventToTelemetryConverter;
-            }
-        }
+        protected Func<LogEvent, IFormatProvider, ITelemetry> LogEventToTelemetryConverter { get; }
 
         /// <summary>
         /// Holds the actual Application Insights TelemetryClient that will be used for logging.
         /// </summary>
-        public TelemetryClient TelemetryClient
-        {
-            get
-            {
-                CheckForAndThrowIfDisposed();
-
-                return _telemetryClient;
-            }
-        }
+        public TelemetryClient TelemetryClient => _telemetryClient;
 
         /// <summary>
         /// Creates a sink that saves logs to the Application Insights account for the given <paramref name="telemetryClient" /> instance.
@@ -119,9 +92,9 @@ namespace Serilog.Sinks.ApplicationInsights
             IFormatProvider formatProvider = null)
         {
             _telemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
-            _logEventToTelemetryConverter = logEventToTelemetryConverter ?? throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
+            LogEventToTelemetryConverter = logEventToTelemetryConverter ?? throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
 
-            _formatProvider = formatProvider;
+            FormatProvider = formatProvider;
         }
 
         #region AI specifc Helper methods
@@ -139,7 +112,7 @@ namespace Serilog.Sinks.ApplicationInsights
 
             // the .Track() method is save to use (even though documented otherwise)
             // see https://github.com/Microsoft/ApplicationInsights-dotnet/issues/244
-            TelemetryClient.Track(telemetry);
+            TelemetryClient?.Track(telemetry);
         }
 
         #endregion AI specifc Helper methods
@@ -223,8 +196,20 @@ namespace Serilog.Sinks.ApplicationInsights
                 // we only have managed resources to dispose of
                 if (disposeManagedResources)
                 {
-                    // free managed resources
-                    _telemetryClient?.Flush();
+                    // attempt to free managed resources
+                    try
+                    {
+                        // this apparently (see https://github.com/serilog/serilog-sinks-applicationinsights/issues/46#issuecomment-379218037) throws a NullReference Exception on app shutdown..
+                        _telemetryClient?.Flush();
+                    }
+                    catch (Exception)
+                    {
+                        // .. and as ugly as THIS is, .Dispose() methods shall not throw exceptions
+                    }
+                    finally
+                    {
+                        _telemetryClient = null;
+                    }
                 }
             }
             finally

@@ -45,7 +45,7 @@ namespace Serilog.Sinks.ApplicationInsights
         }
 
         /// <summary>
-        /// Emits the provided <paramref name="logEvent" /> to AI as an <see cref="EventTelemetry" />.
+        /// Emits the provided <paramref name="logEvent" /> to AI as an <see cref="TraceTelemetry" />.
         /// </summary>
         /// <param name="logEvent">The log event.</param>
         /// <param name="formatProvider">The format provider.</param>
