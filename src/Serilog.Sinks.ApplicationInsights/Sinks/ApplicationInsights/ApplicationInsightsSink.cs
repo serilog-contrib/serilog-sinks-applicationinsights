@@ -39,8 +39,8 @@ namespace Serilog.Sinks.ApplicationInsights
             IFormatProvider formatProvider = null)
             : base(telemetryClient, logEventToTelemetryConverter, formatProvider)
         {
-            if (telemetryClient == null) throw new ArgumentNullException("telemetryClient");
-            if (logEventToTelemetryConverter == null) throw new ArgumentNullException("logEventToTelemetryConverter");
+            if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
+            if (logEventToTelemetryConverter == null) throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
         }
     }
 }

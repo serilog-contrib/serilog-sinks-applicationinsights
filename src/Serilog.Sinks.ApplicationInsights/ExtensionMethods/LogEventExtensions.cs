@@ -62,8 +62,8 @@ namespace Serilog.ExtensionMethods
             bool includeRenderedMessage = true,
             bool includeMessageTemplate = true)
         {
-            if (logEvent == null) throw new ArgumentNullException("logEvent");
-            if (telemetryProperties == null) throw new ArgumentNullException("telemetryProperties");
+            if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
+            if (telemetryProperties == null) throw new ArgumentNullException(nameof(telemetryProperties));
 
             if (includeLogLevel)
             {
@@ -107,8 +107,8 @@ namespace Serilog.ExtensionMethods
             bool includeRenderedMessageAsProperty = true,
             bool includeMessageTemplateAsProperty = true)
         {
-            if (logEvent == null) throw new ArgumentNullException("logEvent");
-            if (logEvent.Exception == null) throw new ArgumentException("Must have an Exception", "logEvent");
+            if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
+            if (logEvent.Exception == null) throw new ArgumentException("Must have an Exception", nameof(logEvent));
 
             var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
             {
@@ -150,7 +150,7 @@ namespace Serilog.ExtensionMethods
             bool includeRenderedMessageAsProperty = true,
             bool includeMessageTemplateAsProperty = true)
         {
-            if (logEvent == null) throw new ArgumentNullException("logEvent");
+            if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
             var telemetry = new EventTelemetry(logEvent.MessageTemplate.Text)
             {
@@ -183,7 +183,7 @@ namespace Serilog.ExtensionMethods
             bool includeRenderedMessageAsProperty = false,
             bool includeMessageTemplateAsProperty = true)
         {
-            if (logEvent == null) throw new ArgumentNullException("logEvent");
+            if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
             var renderedMessage = logEvent.RenderMessage(formatProvider);
 
