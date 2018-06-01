@@ -170,13 +170,12 @@ namespace Serilog
         /// /// <exception cref="ArgumentNullException"><paramref name="telemetryConfiguration" /> is <see langword="null" />.</exception>
         public static LoggerConfiguration ApplicationInsightsEvents(
             this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryConfiguration telemetryConfiguration,
+            TelemetryConfiguration telemetryConfiguration = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
             Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryConfiguration == null) throw new ArgumentNullException(nameof(telemetryConfiguration));
 
             return loggerConfiguration.Sink(
                 new ApplicationInsightsEventsSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, logEventToTelemetryConverter),
@@ -256,13 +255,13 @@ namespace Serilog
         /// <exception cref="ArgumentNullException"><paramref name="telemetryConfiguration" /> is <see langword="null" />.</exception>
         public static LoggerConfiguration ApplicationInsightsTraces(
             this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryConfiguration telemetryConfiguration,
+            TelemetryConfiguration telemetryConfiguration = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
             Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryConfiguration == null) throw new ArgumentNullException(nameof(telemetryConfiguration));
+            if (telemetryConfiguration == null) telemetryConfiguration = TelemetryConfiguration.Active;
 
             return loggerConfiguration.Sink(
                 new ApplicationInsightsTracesSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, logEventToTelemetryConverter),

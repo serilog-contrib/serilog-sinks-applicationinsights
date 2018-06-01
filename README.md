@@ -4,7 +4,9 @@ A sink for Serilog that writes events to Microsoft Application Insights.
  
 [![Build status](https://ci.appveyor.com/api/projects/status/ccgd7k98kbmifl5v/branch/master?svg=true)](https://ci.appveyor.com/project/serilog/serilog-sinks-applicationinsights/branch/master) [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
 
-This Sink comes with two main helper extensions that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry`:
+This Sink comes with several helper extensions that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
+
+The simplest way to configure Serilog to send data to a ApplicationInsights dashboard via Instrumentation key is:
 
 ```csharp
 var log = new LoggerConfiguration()
@@ -24,7 +26,27 @@ var log = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-Note: Whether you choose `EventTelemetry` or `TraceTelemetry `, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
+However, you probably want to configure ApplicationInsights through a more traditional method, and just let Serilog use `TelemetryConfiguration.Active`. To do this in Startup.cs in an Asp.NET Core site:
+
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.Configure<RequestTelemetryEnricherOptions>(Configuration);
+    services.AddApplicationInsightsTelemetry();
+
+    var log = new LoggerConfiguration()
+        .WriteTo
+	    .ApplicationInsightsTraces() // or .ApplicationInsightsEvents()
+        .CreateLogger();
+
+    // . . .
+}
+```
+
+If you pass no paramaters to `ApplicationInsightsTraces()` or `ApplicationInsightsEvents()` it will create a `TelemetryClient` from `TelemetryConfiguration.Active`
+
+**Note:** Whether you choose `EventTelemetry` or `TraceTelemetry `, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
 
 Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
 
