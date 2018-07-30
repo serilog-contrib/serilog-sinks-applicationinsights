@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights;
+using System;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 
 namespace Serilog
@@ -48,7 +48,7 @@ namespace Serilog
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             string instrumentationKey,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
+            ILogEventToTelemetryConverter logEventToTelemetryConverter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null)
         {
@@ -80,7 +80,7 @@ namespace Serilog
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryConfiguration telemetryConfiguration,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
+            ILogEventToTelemetryConverter logEventToTelemetryConverter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null)
         {
@@ -113,7 +113,7 @@ namespace Serilog
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryClient telemetryClient,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
+            ILogEventToTelemetryConverter logEventToTelemetryConverter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null)
         {
@@ -145,7 +145,7 @@ namespace Serilog
             string instrumentationKey,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
+            ILogEventToTelemetryConverter logEventToTelemetryConverter = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
 
@@ -170,13 +170,12 @@ namespace Serilog
         /// /// <exception cref="ArgumentNullException"><paramref name="telemetryConfiguration" /> is <see langword="null" />.</exception>
         public static LoggerConfiguration ApplicationInsightsEvents(
             this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryConfiguration telemetryConfiguration,
+            TelemetryConfiguration telemetryConfiguration = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
+            ILogEventToTelemetryConverter logEventToTelemetryConverter = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryConfiguration == null) throw new ArgumentNullException(nameof(telemetryConfiguration));
 
             return loggerConfiguration.Sink(
                 new ApplicationInsightsEventsSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, logEventToTelemetryConverter),
@@ -202,7 +201,7 @@ namespace Serilog
             TelemetryClient telemetryClient,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
+            ILogEventToTelemetryConverter logEventToTelemetryConverter = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
             if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
@@ -231,7 +230,7 @@ namespace Serilog
             string instrumentationKey,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
+            ILogEventToTelemetryConverter logEventToTelemetryConverter = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
 
@@ -256,13 +255,13 @@ namespace Serilog
         /// <exception cref="ArgumentNullException"><paramref name="telemetryConfiguration" /> is <see langword="null" />.</exception>
         public static LoggerConfiguration ApplicationInsightsTraces(
             this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryConfiguration telemetryConfiguration,
+            TelemetryConfiguration telemetryConfiguration = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
+            ILogEventToTelemetryConverter logEventToTelemetryConverter = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryConfiguration == null) throw new ArgumentNullException(nameof(telemetryConfiguration));
+            if (telemetryConfiguration == null) telemetryConfiguration = TelemetryConfiguration.Active;
 
             return loggerConfiguration.Sink(
                 new ApplicationInsightsTracesSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, logEventToTelemetryConverter),
@@ -288,7 +287,7 @@ namespace Serilog
             TelemetryClient telemetryClient,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
+            ILogEventToTelemetryConverter logEventToTelemetryConverter = null)
         {
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
             if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));

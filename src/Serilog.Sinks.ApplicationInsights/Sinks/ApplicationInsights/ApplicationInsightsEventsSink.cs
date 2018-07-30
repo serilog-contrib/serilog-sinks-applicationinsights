@@ -37,32 +37,10 @@ namespace Serilog.Sinks.ApplicationInsights
         public ApplicationInsightsEventsSink(
             TelemetryClient telemetryClient,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
-            : base(telemetryClient, logEventToTelemetryConverter ?? DefaultLogEventToEventTelemetryConverter, formatProvider)
+            ILogEventToTelemetryConverter logEventToTelemetryConverter = null)
+            : base(telemetryClient, logEventToTelemetryConverter ?? new DefaultLogEventToTelemetryConverter<EventTelemetry>(), formatProvider)
         {
             if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
-        }
-
-        /// <summary>
-        /// Emits the provided <paramref name="logEvent" /> to AI as an <see cref="EventTelemetry" />.
-        /// </summary>
-        /// <param name="logEvent">The log event.</param>
-        /// <param name="formatProvider">The format provider.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">logEvent</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
-        private static ITelemetry DefaultLogEventToEventTelemetryConverter(LogEvent logEvent, IFormatProvider formatProvider)
-        {
-            if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
-
-            if (logEvent.Exception == null)
-            {
-                return logEvent.ToDefaultEventTelemetry(formatProvider);
-            }
-            else
-            {
-                return logEvent.ToDefaultExceptionTelemetry(formatProvider);
-            }
         }
     }
 }

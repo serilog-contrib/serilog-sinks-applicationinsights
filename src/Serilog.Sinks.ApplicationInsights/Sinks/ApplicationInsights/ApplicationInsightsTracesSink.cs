@@ -37,34 +37,11 @@ namespace Serilog.Sinks.ApplicationInsights
         public ApplicationInsightsTracesSink(
             TelemetryClient telemetryClient,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
-            : base(telemetryClient, logEventToTelemetryConverter ?? DefaultLogEventToTraceTelemetryConverter, formatProvider)
+            ILogEventToTelemetryConverter logEventToTelemetryConverter = null)
+            : base(telemetryClient, logEventToTelemetryConverter ?? new DefaultLogEventToTelemetryConverter<TraceTelemetry>(), formatProvider)
         {
             if (telemetryClient == null)
                 throw new ArgumentNullException(nameof(telemetryClient));
-        }
-
-        /// <summary>
-        /// Emits the provided <paramref name="logEvent" /> to AI as an <see cref="TraceTelemetry" />.
-        /// </summary>
-        /// <param name="logEvent">The log event.</param>
-        /// <param name="formatProvider">The format provider.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">logEvent</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
-        private static ITelemetry DefaultLogEventToTraceTelemetryConverter(LogEvent logEvent, IFormatProvider formatProvider)
-        {
-            if (logEvent == null)
-                throw new ArgumentNullException(nameof(logEvent));
-
-            if (logEvent.Exception == null)
-            {
-                return logEvent.ToDefaultTraceTelemetry(formatProvider);
-            }
-            else
-            {
-                return logEvent.ToDefaultExceptionTelemetry(formatProvider);
-            }
         }
     }
 }

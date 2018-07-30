@@ -35,7 +35,7 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <exception cref="ArgumentNullException"><paramref name="logEventToTelemetryConverter" /> is <see langword="null" />.</exception>
         public ApplicationInsightsSink(
             TelemetryClient telemetryClient,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
+            ILogEventToTelemetryConverter logEventToTelemetryConverter,
             IFormatProvider formatProvider = null)
             : base(telemetryClient, logEventToTelemetryConverter, formatProvider)
         {

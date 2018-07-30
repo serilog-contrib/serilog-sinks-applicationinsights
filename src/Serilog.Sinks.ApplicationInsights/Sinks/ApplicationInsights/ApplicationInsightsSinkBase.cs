@@ -72,7 +72,9 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <value>
         /// The log event to telemetry converter.
         /// </value>
-        protected Func<LogEvent, IFormatProvider, ITelemetry> LogEventToTelemetryConverter { get; }
+        //protected Func<LogEvent, IFormatProvider, ITelemetry> LogEventToTelemetryConverter { get; }
+
+        protected ILogEventToTelemetryConverter LogEventToTelemetryConverter { get; }
 
         /// <summary>
         /// Holds the actual Application Insights TelemetryClient that will be used for logging.
@@ -88,7 +90,7 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> cannot be null</exception>
         protected ApplicationInsightsSinkBase(
             TelemetryClient telemetryClient,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
+            ILogEventToTelemetryConverter logEventToTelemetryConverter,
             IFormatProvider formatProvider = null)
         {
             _telemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));

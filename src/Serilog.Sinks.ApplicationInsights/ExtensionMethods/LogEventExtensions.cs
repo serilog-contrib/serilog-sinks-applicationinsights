@@ -14,6 +14,7 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
@@ -100,7 +101,7 @@ namespace Serilog.ExtensionMethods
         /// <returns>An <see cref="ExceptionTelemetry"/> for the <paramref name="logEvent"/></returns>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
         /// <exception cref="ArgumentException"><paramref name="logEvent" /> must have a <see cref="LogEvent.Exception" />.</exception>
-        public static ExceptionTelemetry ToDefaultExceptionTelemetry(
+        private static ExceptionTelemetry ToDefaultExceptionTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
             bool includeLogLevelAsProperty = true,
@@ -143,7 +144,7 @@ namespace Serilog.ExtensionMethods
         /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
         /// <returns>An <see cref="EventTelemetry"/> for the <paramref name="logEvent"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
-        public static EventTelemetry ToDefaultEventTelemetry(
+        private static EventTelemetry ToDefaultEventTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
             bool includeLogLevelAsProperty = true,
@@ -176,7 +177,7 @@ namespace Serilog.ExtensionMethods
         /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
         /// <returns>An <see cref="TraceTelemetry"/> for the <paramref name="logEvent"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
-        public static TraceTelemetry ToDefaultTraceTelemetry(
+        private static TraceTelemetry ToDefaultTraceTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
             bool includeLogLevelAsProperty = true,
@@ -197,6 +198,88 @@ namespace Serilog.ExtensionMethods
             logEvent.ForwardPropertiesToTelemetryProperties(telemetry, formatProvider, includeLogLevelAsProperty, includeRenderedMessageAsProperty, includeMessageTemplateAsProperty);
 
             return telemetry;
+        }
+
+        /// <summary>
+        /// Converts the provided <paramref name="logEvent" /> to an generic AI <see cref="T" /> of type <see cref="ITelemetry"/>.
+        /// </summary>
+        /// <typeparam name="T">any type thats inherits from <see cref="ITelemetry"/></typeparam>
+        /// <param name="logEvent">The log event.</param>
+        /// <param name="formatProvider">The format provider.</param>
+        /// <param name="includeLogLevelAsProperty">if set to <c>true</c> the <see cref="LogEvent.Level"/> is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesLogLevel"/> key.
+        /// If null, the default value will match the implementation for ToDefault****Telemetry</param>
+        /// <param name="includeRenderedMessageAsProperty">if set to <c>true</c> the <see cref="LogEvent.RenderMessage(IFormatProvider)"/> output is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesRenderedMessage"/> key.
+        /// If null, the default value will match the implementation for ToDefault****Telemetry</param>
+        /// <param name="includeMessageTemplateAsProperty">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
+        /// created <see cref="ITelemetry"/> Properties using the <see cref="TelemetryPropertiesMessageTemplate"/> key.
+        /// If null, the default value will match the implementation for ToDefault****Telemetry</param>
+        /// <returns>Depends on generic type returns <see cref="ITelemetry"/> for the <paramref name="logEvent"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
+        public static ITelemetry ToDefaultTelemetry<T>(
+            this LogEvent logEvent,
+            IFormatProvider formatProvider,
+            bool? includeLogLevelAsProperty = null,
+            bool? includeRenderedMessageAsProperty = null,
+            bool? includeMessageTemplateAsProperty = null)
+            where T : ITelemetry
+        {
+            //make it easy to implement multiple telemetry converters in one method, by using generic parameter type and its constraint
+            var type = typeof(T);
+            ITelemetry result;
+            if (type == typeof(TraceTelemetry))
+            {
+                result = logEvent.ToDefaultTraceTelemetry(
+                    formatProvider,
+                    includeLogLevelAsProperty.GetValueOrDefault(true),
+                    includeRenderedMessageAsProperty.GetValueOrDefault(false), 
+                    includeMessageTemplateAsProperty.GetValueOrDefault(true));
+            }
+            else if (type == typeof(RequestTelemetry))
+            {
+                throw new NotImplementedException();
+            }
+            else if (type == typeof(PageViewTelemetry))
+            {
+                throw new NotImplementedException();
+            }
+            else if (type == typeof(MetricTelemetry))
+            {
+                throw new NotImplementedException();
+            }
+            else if (type == typeof(ExceptionTelemetry))
+            {
+                result = logEvent.ToDefaultExceptionTelemetry(
+                    formatProvider,
+                    includeLogLevelAsProperty.GetValueOrDefault(true),
+                    includeRenderedMessageAsProperty.GetValueOrDefault(true),
+                    includeMessageTemplateAsProperty.GetValueOrDefault(true));
+            }
+            else if (type == typeof(EventTelemetry))
+            {
+                result = logEvent.ToDefaultEventTelemetry(
+                    formatProvider,
+                    includeLogLevelAsProperty.GetValueOrDefault(true),
+                    includeRenderedMessageAsProperty.GetValueOrDefault(true),
+                    includeMessageTemplateAsProperty.GetValueOrDefault(true));
+            }
+            else if (type == typeof(DependencyTelemetry))
+            {
+                throw new NotImplementedException();
+            }
+            else if (type == typeof(AvailabilityTelemetry))
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                var obsolete = type.GetTypeInfo().GetCustomAttribute<ObsoleteAttribute>(false);
+                throw new NotSupportedException($"Give Telemetry of type {type} is not supported by anymore. {obsolete?.Message}");
+            }
+            
+
+            return result;
         }
     }
 }

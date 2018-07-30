@@ -26,21 +26,24 @@ var log = new LoggerConfiguration()
 
 Note: Whether you choose `EventTelemetry` or `TraceTelemetry `, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
 
-Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
+Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `ILogEventToTelemetryConverter logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
 
 ```csharp
 var log = new LoggerConfiguration()
     .WriteTo
-	.ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", LogEventsToMetricTelemetryConverter)
+	.ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", new LogToTelemetryTestConverter())
     .CreateLogger();
 
 // ....
 
-private static ITelemetry LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider)
+public class LogToTelemetryTestConverter : ILogEventToTelemetryConverter
 {
-    var metricTelemetry = new MetricTelemetry(/* ...*/);
-    // forward properties from logEvent or ignore them altogether...
-    return metricTelemetry;
+    public ITelemetry Invoke(LogEvent logEvent, IFormatProvider formatProvider)
+    {
+        var metricTelemetry = new MetricTelemetry(/* ...*/);
+        // forward properties from logEvent or ignore them altogether...
+        return metricTelemetry;
+    }
 }
 
 ```
@@ -58,33 +61,84 @@ public static void Main()
         .CreateLogger();
 }
 
-private static ITelemetry ConvertLogEventsToCustomTraceTelemetry(LogEvent logEvent, IFormatProvider formatProvider)
+public class LogToTelemetryTestConverter : ILogEventToTelemetryConverter
 {
-    // first create a default TraceTelemetry using the sink's default logic
-    // .. but without the log level, and (rendered) message (template) included in the Properties
-    var telemetry = logEvent.ToDefaultTraceTelemetry(
-        formatProvider,
-        includeLogLevelAsProperty: false,
-        includeRenderedMessageAsProperty: false,
-        includeMessageTemplateAsProperty: false);
-
-    // then go ahead and post-process the telemetry's context to contain the user id as desired
-    if (logEvent.Properties.ContainsKey("UserId"))
+    public ITelemetry Invoke(LogEvent logEvent, IFormatProvider formatProvider)
     {
-        telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
-    }
+        // first create a default TraceTelemetry using the sink's default logic
+        // .. but without the log level, and (rendered) message (template) included in the Properties
+        var telemetry = logEvent.ToDefaultTelemetry<TraceTelemetry>(
+            formatProvider,
+            includeLogLevelAsProperty: false,
+            includeRenderedMessageAsProperty: false,
+            includeMessageTemplateAsProperty: false);
 
-    // and remove the UserId from the Telemetry .Properties (we don't need redundancies)
-    if (telemetry.Properties.ContainsKey("UserId"))
-    {
-        telemetry.Properties.Remove("UserId");
-    }
+        // then go ahead and post-process the telemetry's context to contain the user id as desired
+        if (logEvent.Properties.ContainsKey("UserId"))
+        {
+            telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
+        }
+
+        // and remove the UserId from the Telemetry .Properties (we don't need redundancies)
+        if (telemetry.Properties.ContainsKey("UserId"))
+        {
+            telemetry.Properties.Remove("UserId");
+        }
 	
-    return telemetry;
+        return telemetry;
+    }
 }
 ```
 
 If you want to skip sending a particular LogEvent, just return `null` from your own converter method.
+
+
+### How to configure application insights with appsettings.json
+
+with new interface implementation its possible to configure Application Insights over the appsettings.json
+
+```json
+{
+  "Serilog": {
+    "Using": [ "[assembly fully qualified type name]" ],
+    "WriteTo": [
+      {
+        "Name": "ApplicationInsights",
+        "Args": {
+          "restrictedToMinimumLevel": "Information",
+          "instrumentationKey": "3c36...",
+          "logEventToTelemetryConverter": "[Namespace].LogToTelemetryTestConverter, [assembly fully qualified type name]"
+        }
+      },
+      {
+        "Name": "ApplicationInsightsTraces",
+        "Args": {
+          "restrictedToMinimumLevel": "Information",
+          "instrumentationKey": "3c36..."
+        }
+      }
+    ]
+  }
+}
+```
+
+Example for C# initialization. For ConfigurationBuilder is `Microsoft.Extensions.Configuration.Json` Nuget package required
+
+```csharp
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)
+    .Build();
+
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
+
+
+logger.Fatal(new Exception("blub"), "Fatal Exception");
+```
+
+this config will create two sinks. The first one with custom implemented `ILogEventToTelemetryConverter` and the second one with default `ILogEventToTelemetryConverter` implementation.
 
 
 ## How, When and Why to Flush Messages Manually
@@ -102,9 +156,9 @@ You can either use Persistent Channels (see below) or control when AI shall flus
 
 // ...
 _telemetryClient = new TelemetryClient()
-            {
-                InstrumentationKey = "<My AI Instrumentation Key>"
-            };
+{
+    InstrumentationKey = "<My AI Instrumentation Key>"
+};
 ```
 
 2.) Use that custom `TelemetryClient` to initialize the Sink:
