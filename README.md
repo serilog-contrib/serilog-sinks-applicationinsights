@@ -68,7 +68,7 @@ private static ITelemetry LogEventsToMetricTelemetryConverter(LogEvent serilogLo
 ```
 
 
-.. or alternatively by using the built-in, default TraceTelemetry generation logic, but adapt the Telemetry's Context to include a UserId:
+.. or alternatively by using the built-in, default TraceTelemetry generation logic, but adapt the Telemetry's Context to include a UserId, operation_Id and operation_parentId when those properties is available. By setting operation id the gui in azure will display all loggs from that operation when that item is selected:
 
 
 ```csharp
@@ -80,30 +80,64 @@ public static void Main()
         .CreateLogger();
 }
 
+
+
 private static ITelemetry ConvertLogEventsToCustomTraceTelemetry(LogEvent logEvent, IFormatProvider formatProvider)
 {
     // first create a default TraceTelemetry using the sink's default logic
     // .. but without the log level, and (rendered) message (template) included in the Properties
-    var telemetry = logEvent.ToDefaultTraceTelemetry(
-        formatProvider,
-        includeLogLevelAsProperty: false,
-        includeRenderedMessageAsProperty: false,
-        includeMessageTemplateAsProperty: false);
+    var telemetry = GetTelematry(logEvent);
 
     // then go ahead and post-process the telemetry's context to contain the user id as desired
     if (logEvent.Properties.ContainsKey("UserId"))
     {
         telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
     }
-
-    // and remove the UserId from the Telemetry .Properties (we don't need redundancies)
-    if (telemetry.Properties.ContainsKey("UserId"))
+    // post-process the telemetry's context to contain the operation id
+    if (logEvent.Properties.ContainsKey("operation_Id"))
     {
-        telemetry.Properties.Remove("UserId");
+        telemetry.Context.Operation.Id = logEvent.Properties["operation_Id"].ToString();
     }
-	
+    // post-process the telemetry's context to contain the operation parent id
+    if (logEvent.Properties.ContainsKey("operation_parentId"))
+    {
+        telemetry.Context.Operation.ParentId = logEvent.Properties["operation_parentId"].ToString();
+    }
+    // typecast to ISupportProperties so you can manipulate the properties as desired
+    ISupportProperties propTelematry = (ISupportProperties)telemetry;
+
+    // find redundent properties
+    var removeProps = new[] { "UserId", "operation_parentId", "operation_Id" };
+    removeProps = removeProps.Where(prop => propTelematry.Properties.ContainsKey(prop)).ToArray();
+
+    foreach (var prop in removeProps)
+    {
+        // remove redundent properties
+        propTelematry.Properties.Remove(prop);
+    }	
     return telemetry;
 }
+
+private static ITelemetry GetTelematry(LogEvent logEvent)
+{
+    if (logEvent.Exception != null) {
+        // Exception telematry
+        return logEvent.ToDefaultExceptionTelemetry(
+        formatProvider,
+        includeLogLevelAsProperty: false,
+        includeRenderedMessageAsProperty: false,
+        includeMessageTemplateAsProperty: false);
+    }
+    else {
+        // default telematry
+        return logEvent.ToDefaultTraceTelemetry(
+        formatProvider,
+        includeLogLevelAsProperty: false,
+        includeRenderedMessageAsProperty: false,
+        includeMessageTemplateAsProperty: false);
+    }
+}
+
 ```
 
 If you want to skip sending a particular LogEvent, just return `null` from your own converter method.
