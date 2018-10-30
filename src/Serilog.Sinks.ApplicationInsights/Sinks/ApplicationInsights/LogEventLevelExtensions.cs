@@ -39,8 +39,9 @@ namespace Serilog.Sinks.ApplicationInsights
                 case LogEventLevel.Warning:
                     return SeverityLevel.Warning;
                 case LogEventLevel.Error:
-                case LogEventLevel.Fatal:
                     return SeverityLevel.Error;
+                case LogEventLevel.Fatal:
+                    return SeverityLevel.Critical;
             }
 
             return null;
