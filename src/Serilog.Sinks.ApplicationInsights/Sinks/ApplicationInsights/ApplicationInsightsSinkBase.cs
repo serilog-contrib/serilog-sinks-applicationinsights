@@ -199,12 +199,7 @@ namespace Serilog.Sinks.ApplicationInsights
                     // attempt to free managed resources
                     try
                     {
-                        // this apparently (see https://github.com/serilog/serilog-sinks-applicationinsights/issues/46#issuecomment-379218037) throws a NullReference Exception on app shutdown..
                         _telemetryClient?.Flush();
-                    }
-                    catch (Exception)
-                    {
-                        // .. and as ugly as THIS is, .Dispose() methods shall not throw exceptions
                     }
                     finally
                     {
