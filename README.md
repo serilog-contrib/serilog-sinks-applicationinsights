@@ -194,9 +194,9 @@ By default the Application Insights client and therefore also this Sink use an i
 
 Besides flushing the messages manually (see above), you can also use a custom `ITelemetryChannel` such as the [Persistent Channel(s)](https://azure.microsoft.com/en-us/documentation/articles/app-insights-windows-services/#persistence-channel) one with this Sink and thereby *not* lose messages, i.e. like this:
 
-1.) Add the [Microsoft.ApplicationInsights.PersistenceChannel](https://www.nuget.org/packages/Microsoft.ApplicationInsights.PersistenceChannel) to your project
+1) Add the [Microsoft.ApplicationInsights.AspNetCore](https://www.nuget.org/packages/Microsoft.ApplicationInsights.AspNetCore/) to your project
 
-2.) Create a `TelemetryConfiguration` using the Persistence Channel:
+2) Create a `TelemetryConfiguration` using the Persistence Channel:
 
 ```csharp
 var configuration = new TelemetryConfiguration()
@@ -206,7 +206,7 @@ var configuration = new TelemetryConfiguration()
             };
 ```
 
-3.) Use that custom `TelemetryConfiguration` to initialize the Sink:
+3) Use that custom `TelemetryConfiguration` to initialize the Sink:
 
 ```csharp
 var log = new LoggerConfiguration()
