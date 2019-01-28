@@ -1,6 +1,7 @@
 ﻿using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,17 +13,38 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
     {
         private readonly UnitTestTelemetryChannel _channel;
 
-        public ApplicationInsightsTest()
+        protected ApplicationInsightsTest(Func<LogEvent, IFormatProvider, ITelemetry> conversion)
         {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.ApplicationInsightsTraces("")
+            var tc = new TelemetryConfiguration("", _channel = new UnitTestTelemetryChannel());
+
+            Logger = new LoggerConfiguration()
+                .WriteTo.ApplicationInsights(tc, conversion)
                 .MinimumLevel.Debug()
                 .CreateLogger();
 
-            var tc = TelemetryConfiguration.Active;
-
-            tc.TelemetryChannel = _channel = new UnitTestTelemetryChannel();
         }
+
+        protected ApplicationInsightsTest(Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> conversion)
+        {
+            var tc = new TelemetryConfiguration("", _channel = new UnitTestTelemetryChannel());
+
+            Logger = new LoggerConfiguration()
+                .WriteTo.ApplicationInsights(tc, conversion)
+                .MinimumLevel.Debug()
+                .CreateLogger();
+        }
+
+        protected ApplicationInsightsTest()
+        {
+            var tc = new TelemetryConfiguration("", _channel = new UnitTestTelemetryChannel());
+
+            Logger = new LoggerConfiguration()
+                .WriteTo.ApplicationInsightsTraces(tc)
+                .MinimumLevel.Debug()
+                .CreateLogger();
+        }
+
+        protected ILogger Logger { get; private set; }
 
         protected List<ITelemetry> SubmittedTelemetry => _channel.SubmittedTelemetry;
 
@@ -33,5 +55,6 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
                 .Where(t => t is TraceTelemetry)
                 .Select(t => (TraceTelemetry)t)
                 .LastOrDefault();
+
     }
 }
