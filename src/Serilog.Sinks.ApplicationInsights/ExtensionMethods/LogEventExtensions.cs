@@ -58,9 +58,9 @@ namespace Serilog.ExtensionMethods
         public static void ForwardPropertiesToTelemetryProperties(this LogEvent logEvent,
             ISupportProperties telemetryProperties,
             IFormatProvider formatProvider,
-            bool includeLogLevel = true,
+            bool includeLogLevel = false,
             bool includeRenderedMessage = true,
-            bool includeMessageTemplate = true)
+            bool includeMessageTemplate = false)
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
             if (telemetryProperties == null) throw new ArgumentNullException(nameof(telemetryProperties));
@@ -103,9 +103,9 @@ namespace Serilog.ExtensionMethods
         public static ExceptionTelemetry ToDefaultExceptionTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
-            bool includeLogLevelAsProperty = true,
+            bool includeLogLevelAsProperty = false,
             bool includeRenderedMessageAsProperty = true,
-            bool includeMessageTemplateAsProperty = true)
+            bool includeMessageTemplateAsProperty = false)
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
             if (logEvent.Exception == null) throw new ArgumentException("Must have an Exception", nameof(logEvent));
@@ -146,9 +146,9 @@ namespace Serilog.ExtensionMethods
         public static EventTelemetry ToDefaultEventTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
-            bool includeLogLevelAsProperty = true,
+            bool includeLogLevelAsProperty = false,
             bool includeRenderedMessageAsProperty = true,
-            bool includeMessageTemplateAsProperty = true)
+            bool includeMessageTemplateAsProperty = false)
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
@@ -179,9 +179,9 @@ namespace Serilog.ExtensionMethods
         public static TraceTelemetry ToDefaultTraceTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
-            bool includeLogLevelAsProperty = true,
+            bool includeLogLevelAsProperty = false,
             bool includeRenderedMessageAsProperty = false,
-            bool includeMessageTemplateAsProperty = true)
+            bool includeMessageTemplateAsProperty = false)
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 

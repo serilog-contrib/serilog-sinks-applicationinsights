@@ -2,7 +2,8 @@ version: '{build}'
 skip_tags: true
 image: Visual Studio 2017
 configuration: Release
-test: off
+test_script:
+- cmd: dotnet test src/Serilog.Sinks.ApplicationInsights.Tests/Serilog.Sinks.ApplicationInsights.Tests.csproj
 build_script:
 - ps: ./Build.ps1
 artifacts:
