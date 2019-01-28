@@ -141,7 +141,10 @@ namespace Serilog.Sinks.ApplicationInsights
                 {
                     foreach (ITelemetry telemetry in telemetries)
                     {
-                        TrackTelemetry(telemetry);
+                        if (telemetry != null)
+                        {
+                            TrackTelemetry(telemetry);
+                        }
                     }
                 }
             }

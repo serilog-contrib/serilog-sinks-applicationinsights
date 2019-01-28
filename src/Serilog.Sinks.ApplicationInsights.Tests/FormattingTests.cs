@@ -1,4 +1,5 @@
 using Microsoft.ApplicationInsights.Channel;
+using Serilog.Context;
 using Xunit;
 
 namespace Serilog.Sinks.ApplicationInsights.Tests
@@ -19,6 +20,17 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
             Logger.Information("test");
 
             Assert.False(LastSubmittedTraceTelemetry.Properties.ContainsKey("MessageTemplate"));
+        }
+
+        [Fact]
+        public void Message_properies_include_log_context()
+        {
+            using (LogContext.PushProperty("custom1", "value1"))
+            {
+                Logger.Information("test context");
+
+                Assert.True(LastSubmittedTraceTelemetry.Properties.TryGetValue("custom1", out string value1) && value1 == "value1");
+            }
         }
     }
 }
