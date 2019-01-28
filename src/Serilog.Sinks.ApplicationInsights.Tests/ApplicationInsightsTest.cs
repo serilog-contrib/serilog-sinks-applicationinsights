@@ -41,6 +41,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
             Logger = new LoggerConfiguration()
                 .WriteTo.ApplicationInsightsTraces(tc)
                 .MinimumLevel.Debug()
+                .Enrich.FromLogContext()
                 .CreateLogger();
         }
 
