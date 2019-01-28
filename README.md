@@ -67,6 +67,29 @@ private static ITelemetry LogEventsToMetricTelemetryConverter(LogEvent serilogLo
 
 ```
 
+If you would like to return multiple `ITelemetry` items there is another overload:
+
+```csharp
+var log = new LoggerConfiguration()
+    .WriteTo
+	.ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", LogEventsToMetricTelemetryConverter)
+    .CreateLogger();
+
+// ....
+
+private static IEnumerable<ITelemetry> LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider)
+{
+    var metricTelemetry = new MetricTelemetry(/* ...*/);
+    // forward properties from logEvent or ignore them altogether...
+    yield return metricTelemetry;
+
+    var traceTelemetry = new TraceTelemetry(/* ...*/);
+    // forward properties from logEvent or ignore them altogether...
+    yield return traceTelemetry;
+
+	//...
+}
+```
 
 .. or alternatively by using the built-in, default TraceTelemetry generation logic, but adapt the Telemetry's Context to include a UserId, operation_Id and operation_parentId when those properties is available. By setting operation id the gui in azure will display all loggs from that operation when that item is selected:
 
