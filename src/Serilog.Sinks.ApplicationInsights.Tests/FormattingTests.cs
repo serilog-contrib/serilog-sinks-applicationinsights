@@ -8,7 +8,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         [Fact]
         public void Log_level_is_not_in_trace_custom_property()
         {
-            Log.Information("test");
+            Logger.Information("test");
 
             Assert.False(LastSubmittedTraceTelemetry.Properties.ContainsKey("LogLevel"));
         }
@@ -16,7 +16,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         [Fact]
         public void Message_template_is_not_in_trace_custom_property()
         {
-            Log.Information("test");
+            Logger.Information("test");
 
             Assert.False(LastSubmittedTraceTelemetry.Properties.ContainsKey("MessageTemplate"));
         }

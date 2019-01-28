@@ -14,6 +14,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Serilog.Events;
@@ -36,6 +37,24 @@ namespace Serilog.Sinks.ApplicationInsights
         public ApplicationInsightsSink(
             TelemetryClient telemetryClient,
             Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
+            IFormatProvider formatProvider = null)
+            : base(telemetryClient, (e, f) => new[] { logEventToTelemetryConverter(e, f) }, formatProvider)
+        {
+            if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
+            if (logEventToTelemetryConverter == null) throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
+        }
+
+        /// <summary>
+        /// Creates a sink that saves logs as <see cref="ITelemetry"/> to the Application Insights account for the given <paramref name="telemetryClient" /> instance.
+        /// </summary>
+        /// <param name="telemetryClient">Required Application Insights <paramref name="telemetryClient" />.</param>
+        /// <param name="formatProvider">Supplies culture-specific formatting information, or null for default provider.</param>
+        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> is <see langword="null" />.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="logEventToTelemetryConverter" /> is <see langword="null" />.</exception>
+        public ApplicationInsightsSink(
+            TelemetryClient telemetryClient,
+            Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
             IFormatProvider formatProvider = null)
             : base(telemetryClient, logEventToTelemetryConverter, formatProvider)
         {
