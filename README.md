@@ -109,7 +109,7 @@ private static ITelemetry ConvertLogEventsToCustomTraceTelemetry(LogEvent logEve
 {
     // first create a default TraceTelemetry using the sink's default logic
     // .. but without the log level, and (rendered) message (template) included in the Properties
-    var telemetry = GetTelematry(logEvent);
+    var telemetry = GetTelemetry(logEvent, formatProvider);
 
     // then go ahead and post-process the telemetry's context to contain the user id as desired
     if (logEvent.Properties.ContainsKey("UserId"))
@@ -141,7 +141,7 @@ private static ITelemetry ConvertLogEventsToCustomTraceTelemetry(LogEvent logEve
     return telemetry;
 }
 
-private static ITelemetry GetTelemetry(LogEvent logEvent)
+private static ITelemetry GetTelemetry(LogEvent logEvent, IFormatProvider formatProvider)
 {
     if (logEvent.Exception != null) {
         // Exception telemetry
