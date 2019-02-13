@@ -4,10 +4,9 @@ using System.Globalization;
 using Serilog.Debugging;
 using Serilog.Events;
 
-namespace Serilog.Sinks.ApplicationInsights
+namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.Formatters
 {
-    // ToDo: this requires documentation and probably some refactoring
-    internal static class ApplicationInsightsPropertyFormatter
+    class ApplicationInsightsDefaultValueFormatter : IValueFormatter
     {
         private static readonly IDictionary<Type, Action<string, object, IDictionary<string, string>>> LiteralWriters = new Dictionary
             <Type, Action<string, object, IDictionary<string, string>>>
@@ -21,6 +20,11 @@ namespace Serilog.Sinks.ApplicationInsights
             {typeof (float), (k, v, p) => AppendProperty(p,k,((float)v).ToString("R", CultureInfo.InvariantCulture))},
             {typeof (double), (k, v, p) => AppendProperty(p,k,((double)v).ToString("R", CultureInfo.InvariantCulture))},
         };
+
+        public void Format(string propertyName, LogEventPropertyValue propertyValue, IDictionary<string, string> properties)
+        {
+            WriteValue(propertyName, propertyValue, properties);
+        }
 
         private static void WriteStructureValue(string key, StructureValue structureValue, IDictionary<string, string> properties)
         {
@@ -46,17 +50,18 @@ namespace Serilog.Sinks.ApplicationInsights
                 WriteValue(key + "." + index, eventProperty, properties);
                 index++;
             }
-            AppendProperty(properties,key + ".Count", index.ToString());
+            AppendProperty(properties, key + ".Count", index.ToString());
         }
 
         public static void WriteValue(string key, object value, IDictionary<string, string> properties)
         {
             Action<string, object, IDictionary<string, string>> writer;
-            if (value==null || !LiteralWriters.TryGetValue(value.GetType(), out writer))
+            if (value == null || !LiteralWriters.TryGetValue(value.GetType(), out writer))
             {
                 AppendProperty(properties, key, value?.ToString());
                 return;
             }
+
             writer(key, value, properties);
         }
 

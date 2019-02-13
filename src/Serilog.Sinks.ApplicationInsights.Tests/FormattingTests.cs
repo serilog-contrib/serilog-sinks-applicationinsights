@@ -32,5 +32,18 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
                 Assert.True(LastSubmittedTraceTelemetry.Properties.TryGetValue("custom1", out string value1) && value1 == "value1");
             }
         }
+
+        [Fact]
+        public void Json_parameter_is_dotted_out()
+        {
+            var position = new { Latitude = 25, Longitude = 134 };
+            var elapsedMs = 34;
+
+            Logger.Information("Processed {@Position} in {Elapsed:000} ms., str {str}", position, elapsedMs, "test");
+
+            Assert.Equal("34", LastSubmittedTraceTelemetry.Properties["Elapsed"]);
+            Assert.Equal("25", LastSubmittedTraceTelemetry.Properties["Position.Latitude"]);
+            Assert.Equal("134", LastSubmittedTraceTelemetry.Properties["Position.Longitude"]);
+        }
     }
 }
