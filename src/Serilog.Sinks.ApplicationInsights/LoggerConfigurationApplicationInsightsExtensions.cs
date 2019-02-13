@@ -81,7 +81,7 @@ namespace Serilog
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             string instrumentationKey,
-            Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
+            Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null)
         {
@@ -147,7 +147,7 @@ namespace Serilog
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryConfiguration telemetryConfiguration,
-            Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
+            Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null)
         {
@@ -213,7 +213,7 @@ namespace Serilog
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryClient telemetryClient,
-            Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
+            Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
             IFormatProvider formatProvider = null)
         {
@@ -247,7 +247,7 @@ namespace Serilog
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
 
             return loggerConfiguration.Sink(
-                new ApplicationInsightsEventsSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider, (Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>>)null),
+                new ApplicationInsightsEventsSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
                 restrictedToMinimumLevel);
         }
 
@@ -272,7 +272,7 @@ namespace Serilog
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
 
             return loggerConfiguration.Sink(
-                new ApplicationInsightsEventsSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, (Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>>)null),
+                new ApplicationInsightsEventsSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
                 restrictedToMinimumLevel);
         }
 
@@ -300,7 +300,7 @@ namespace Serilog
             if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
 
             return loggerConfiguration.Sink(
-                new ApplicationInsightsEventsSink(telemetryClient, formatProvider, (Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>>)null),
+                new ApplicationInsightsEventsSink(telemetryClient, formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
                 restrictedToMinimumLevel);
         }
 
@@ -327,7 +327,7 @@ namespace Serilog
             if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
 
             return loggerConfiguration.Sink(
-                new ApplicationInsightsTracesSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider, (Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>>)null),
+                new ApplicationInsightsTracesSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
                 restrictedToMinimumLevel);
         }
 
@@ -355,7 +355,7 @@ namespace Serilog
             if (telemetryConfiguration == null) telemetryConfiguration = TelemetryConfiguration.Active;
 
             return loggerConfiguration.Sink(
-                new ApplicationInsightsTracesSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, (Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>>)null),
+                new ApplicationInsightsTracesSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
                 restrictedToMinimumLevel);
         }
 
@@ -383,7 +383,7 @@ namespace Serilog
             if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
 
             return loggerConfiguration.Sink(
-                new ApplicationInsightsTracesSink(telemetryClient, formatProvider, (Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>>)null),
+                new ApplicationInsightsTracesSink(telemetryClient, formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
                 restrictedToMinimumLevel);
         }
 

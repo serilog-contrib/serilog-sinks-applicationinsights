@@ -1,4 +1,5 @@
-﻿using Microsoft.ApplicationInsights.Channel;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
 using Serilog.ExtensionMethods;
@@ -12,7 +13,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
 {
     public class MultipleTelemetryConversionTest : ApplicationInsightsTest
     {
-        public MultipleTelemetryConversionTest() : base((Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>>) ConvertMultiple)
+        public MultipleTelemetryConversionTest() : base(ConvertMultiple)
         {
 
         }
@@ -33,7 +34,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
             Assert.Equal(2, SubmittedTelemetry.Count(t => t is TraceTelemetry tt && tt.Message == "two"));
         }
 
-        private static IEnumerable<ITelemetry> ConvertMultiple(LogEvent e, IFormatProvider formatProvider)
+        private static IEnumerable<ITelemetry> ConvertMultiple(LogEvent e, IFormatProvider formatProvider, TelemetryClient telemetryClient)
         {
             if (e.MessageTemplate.Text == "two")
             {

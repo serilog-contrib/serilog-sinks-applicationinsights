@@ -1,4 +1,5 @@
-﻿using Microsoft.ApplicationInsights.Channel;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Events;
@@ -24,7 +25,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
 
         }
 
-        protected ApplicationInsightsTest(Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> conversion)
+        protected ApplicationInsightsTest(Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> conversion)
         {
             var tc = new TelemetryConfiguration("", _channel = new UnitTestTelemetryChannel());
 

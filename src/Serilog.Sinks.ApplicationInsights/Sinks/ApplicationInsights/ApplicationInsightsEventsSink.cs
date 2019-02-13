@@ -38,7 +38,7 @@ namespace Serilog.Sinks.ApplicationInsights
         public ApplicationInsightsEventsSink(
             TelemetryClient telemetryClient,
             IFormatProvider formatProvider = null,
-            Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> logEventToTelemetryConverter = null)
+            Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> logEventToTelemetryConverter = null)
             : base(telemetryClient, logEventToTelemetryConverter ?? DefaultLogEventToEventTelemetryConverter, formatProvider)
         {
             if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
@@ -58,8 +58,8 @@ namespace Serilog.Sinks.ApplicationInsights
             Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter = null)
             : this(telemetryClient, formatProvider,
                   logEventToTelemetryConverter == null
-                    ? (Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>>)null
-                    : (e, f) => new[] { logEventToTelemetryConverter(e, f) })
+                    ? (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null
+                    : (e, f, c) => new[] { logEventToTelemetryConverter(e, f) })
         {
         }
 
@@ -72,7 +72,7 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">logEvent</exception>
         /// <exception cref="ArgumentNullException"><paramref name="logEvent" /> is <see langword="null" />.</exception>
-        private static IEnumerable<ITelemetry> DefaultLogEventToEventTelemetryConverter(LogEvent logEvent, IFormatProvider formatProvider)
+        private static IEnumerable<ITelemetry> DefaultLogEventToEventTelemetryConverter(LogEvent logEvent, IFormatProvider formatProvider, TelemetryClient telemetryClient)
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 

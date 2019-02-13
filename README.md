@@ -77,7 +77,7 @@ var log = new LoggerConfiguration()
 
 // ....
 
-private static IEnumerable<ITelemetry> LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider)
+private static IEnumerable<ITelemetry> LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider, TelemetryClient telemetryClient)
 {
     var metricTelemetry = new MetricTelemetry(/* ...*/);
     // forward properties from logEvent or ignore them altogether...
@@ -212,6 +212,6 @@ System.Threading.Thread.Sleep(1000);
 
 ```
 
-Copyright &copy; 2016 Serilog Contributors - Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
+Copyright &copy; 2019 Serilog Contributors - Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
 See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)
