@@ -1,11 +1,11 @@
 ﻿// ---------------------------------------------// Copyright 2016 Serilog Contributors
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,9 +68,9 @@ namespace Serilog.ExtensionMethods
         public static void ForwardPropertiesToTelemetryProperties(this LogEvent logEvent,
             ISupportProperties telemetryProperties,
             IFormatProvider formatProvider,
-            bool includeLogLevel = false,
+            bool includeLogLevel = true,
             bool includeRenderedMessage = true,
-            bool includeMessageTemplate = false,
+            bool includeMessageTemplate = true,
             bool useJsonFormatter = false)
         {
         }
@@ -123,9 +123,9 @@ namespace Serilog.ExtensionMethods
         public static ExceptionTelemetry ToDefaultExceptionTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
-            bool includeLogLevelAsProperty = false,
+            bool includeLogLevelAsProperty = true,
             bool includeRenderedMessageAsProperty = true,
-            bool includeMessageTemplateAsProperty = false,
+            bool includeMessageTemplateAsProperty = true,
             bool useJsonFormatter = false)
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
@@ -165,9 +165,9 @@ namespace Serilog.ExtensionMethods
         public static EventTelemetry ToDefaultEventTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
-            bool includeLogLevelAsProperty = false,
+            bool includeLogLevelAsProperty = true,
             bool includeRenderedMessageAsProperty = true,
-            bool includeMessageTemplateAsProperty = false,
+            bool includeMessageTemplateAsProperty = true,
             bool useJsonFormatter = false)
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));

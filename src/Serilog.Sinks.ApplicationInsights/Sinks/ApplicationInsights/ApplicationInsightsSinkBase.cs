@@ -73,7 +73,7 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <value>
         /// The log event to telemetry converter.
         /// </value>
-        protected Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> LogEventToTelemetryConverter { get; }
+        protected Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> LogEventToTelemetryConverter { get; }
 
         /// <summary>
         /// Holds the actual Application Insights TelemetryClient that will be used for logging.
@@ -89,7 +89,7 @@ namespace Serilog.Sinks.ApplicationInsights
         /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> cannot be null</exception>
         protected ApplicationInsightsSinkBase(
             TelemetryClient telemetryClient,
-            Func<LogEvent, IFormatProvider, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
+            Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
             IFormatProvider formatProvider = null)
         {
             _telemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
@@ -134,7 +134,7 @@ namespace Serilog.Sinks.ApplicationInsights
 
             try
             {
-                IEnumerable<ITelemetry> telemetries = LogEventToTelemetryConverter.Invoke(logEvent, FormatProvider);
+                IEnumerable<ITelemetry> telemetries = LogEventToTelemetryConverter.Invoke(logEvent, FormatProvider, _telemetryClient);
 
                 // if 'null' is returned (& we therefore there's nothing to track), the logEvent is basically skipped
                 if (telemetries != null)

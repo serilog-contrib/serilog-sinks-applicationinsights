@@ -77,7 +77,7 @@ var log = new LoggerConfiguration()
 
 // ....
 
-private static IEnumerable<ITelemetry> LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider)
+private static IEnumerable<ITelemetry> LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider, TelemetryClient telemetryClient)
 {
     var metricTelemetry = new MetricTelemetry(/* ...*/);
     // forward properties from logEvent or ignore them altogether...
@@ -212,6 +212,30 @@ System.Threading.Thread.Sleep(1000);
 
 ```
 
-Copyright &copy; 2016 Serilog Contributors - Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
+
+## Using with Azure Functions
+
+Azure functions has out of the box integration with Application Insights, which automatically logs funtions execution start, end, and any exception. Please refer to the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to enable it.
+
+This sink can enrich AI messages, preserving *operation_Id* and other context information which is *already provided by functions runtime*. The easiest way to configure Serilog in this case is to use **TelemetryConfiguration.Active** which is already properly configured. You can, for instance, initialise logging in the static constructor:
+
+```csharp
+public static class MyFunctions
+{
+        static MyFunctions()
+        {
+            var config = TelemetryConfiguration.Active;
+            if (config != null)
+            {
+                Log.Logger = new LoggerConfiguration()
+                    .Enrich.FromLogContext()
+                    .WriteTo.ApplicationInsightsTraces(config)
+                    .CreateLogger();
+            }
+        }
+}
+```
+
+Copyright &copy; 2019 Serilog Contributors - Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
 See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)

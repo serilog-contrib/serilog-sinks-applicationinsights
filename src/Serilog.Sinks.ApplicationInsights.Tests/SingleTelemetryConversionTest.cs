@@ -10,7 +10,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
 {
     public class SingleTelemetryConversionTest : ApplicationInsightsTest
     {
-        public SingleTelemetryConversionTest() : base((Func<LogEvent, IFormatProvider, ITelemetry>)ConvertSingle)
+        public SingleTelemetryConversionTest() : base(ConvertSingle)
         {
 
         }
