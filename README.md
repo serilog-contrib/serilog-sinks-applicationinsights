@@ -4,167 +4,168 @@ A sink for Serilog that writes events to Microsoft Application Insights.
  
 [![Build status](https://ci.appveyor.com/api/projects/status/ccgd7k98kbmifl5v/branch/master?svg=true)](https://ci.appveyor.com/project/serilog/serilog-sinks-applicationinsights/branch/master) [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
 
-This Sink comes with several helper extensions that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
+This Sink comes with several defaults that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
 
-The simplest way to configure Serilog to send data to a ApplicationInsights dashboard via Instrumentation key is:
+## Configuring
 
-```csharp
-var log = new LoggerConfiguration()
-    .WriteTo
-	.ApplicationInsightsEvents("<MyApplicationInsightsInstrumentationKey>")
-    .CreateLogger();
-```
-
-
-.. or as `TraceTelemetry`:
-
+The simplest way to configure Serilog to send data to a ApplicationInsights dashboard via Instrumentation key is to use current active *telemetry configuration* which is already initialised in most application types like ASP.NET Core, Azure Functions etc.:
 
 ```csharp
 var log = new LoggerConfiguration()
     .WriteTo
-	.ApplicationInsightsTraces("<MyApplicationInsightsInstrumentationKey>")
+	.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Traces)
     .CreateLogger();
 ```
 
-However, you probably want to configure ApplicationInsights through a more traditional method, and just let Serilog use `TelemetryConfiguration.Active`. To do this in Startup.cs in an Asp.NET Core site:
 
+.. or as `EventTelemetry`:
 
-```csharp
-public void ConfigureServices(IServiceCollection services)
-{
-    services.Configure<RequestTelemetryEnricherOptions>(Configuration);
-    services.AddApplicationInsightsTelemetry();
-
-    var log = new LoggerConfiguration()
-        .WriteTo
-	    .ApplicationInsightsTraces() // or .ApplicationInsightsEvents()
-        .CreateLogger();
-
-    // . . .
-}
-```
-
-If you pass no paramaters to `ApplicationInsightsTraces()` or `ApplicationInsightsEvents()` it will create a `TelemetryClient` from `TelemetryConfiguration.Active`
-
-**Note:** Whether you choose `EventTelemetry` or `TraceTelemetry `, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
-
-Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all), via a bit more bare-metal set of overloads that take a  `Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter` parameter, i.e. like this to send over MetricTelemetries:
 
 ```csharp
 var log = new LoggerConfiguration()
     .WriteTo
-	.ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", LogEventsToMetricTelemetryConverter)
+	.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Events)
     .CreateLogger();
-
-// ....
-
-private static ITelemetry LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider)
-{
-    var metricTelemetry = new MetricTelemetry(/* ...*/);
-    // forward properties from logEvent or ignore them altogether...
-    return metricTelemetry;
-}
-
 ```
 
-If you would like to return multiple `ITelemetry` items there is another overload:
+> You can also pass an *instrumentation key* and this sink will create a new `TelemetryConfiguration` based on it, however it's actively discouraged compared to using already initialised telemetry configuration, as your telemetry won't be properly correlated.
+
+**Note:** Whether you choose `Events` or `Traces`, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
+
+## What do we submit?
+
+By default, trace telemetry submits:
+- **rendered message** in trace's standard *message* property.
+- **severity** in trace's standard *severityLevel* property.
+- **timestamp** in trace's standard *timestamp* property.
+- **custom log properties** as *customDimensions*.
+
+Event telemetry submits:
+- **message template** as *event name*
+- **timestamp** in event's standard *timestamp* property.
+- **custom log properties** as *customDimensions*.
+
+Exception telemetry submits:
+- **exception** as standard AI exception.
+- **severity** in trace's standard *severityLevel* property.
+- **timestamp** in trace's standard *timestamp* property.
+- **custom log properties** as *customDimensions*.
+
+> Note that **log context** properties are also included in *customDimensions* when Serilog is configured with `.Enrich.FromLogContext()`.
+
+## How custom properties are logged?
+
+By default custom properties are converted to compact JSON, for instance:
+
+```csharp
+var position = new { Latitude = 25, Longitude = 134 };
+var elapsedMs = 34;
+var numbers = new int[] { 1, 2, 3, 4 };
+
+Logger.Information("Processed {@Position} in {Elapsed:000} ms., str {str}, numbers: {numbers}", position, elapsedMs, "test", numbers);
+```
+
+will produce the following properties in *customDimensions*:
+
+|Property|Value|
+|--------|-----|
+|Elapsed|34|
+|Position|{"Latitude":25,"Longitude":134}|
+|numbers|[1,2,3,4]|
+
+This is a breaking change from v2 which was producing these properties:
+
+|Property|Value|
+|--------|-----|
+|Elapsed|34|
+|Position.Latitude|25|
+|Position.Longitude|134|
+|numbers.0|1|
+|numbers.1|2|
+|numbers.2|3|
+|numbers.3|4|
+
+You can revert the old behavior by overriding standard telemetry formatter, for instance:
+
+```csharp
+private class DottedOutTraceTelemetryConverter : TraceTelemetryConverter
+{
+    public override IValueFormatter ValueFormatter => new ApplicationInsightsDottedValueFormatter();
+}
+```
+
+## Customising
+
+Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all) by passing your own `ITelemetryConverter` instead of `TelemetryConverter.Traces` or `TelemetryConverter.Events` by either implementing your own `ITelemetryConverter` or deriving from `TraceTelemetryConverter` or `EventTelemetryConverter` and overriding specific bits.
+
 
 ```csharp
 var log = new LoggerConfiguration()
     .WriteTo
-	.ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", LogEventsToMetricTelemetryConverter)
+	.ApplicationInsights(configuration, new CustomConverter())
     .CreateLogger();
+// ...
 
-// ....
-
-private static IEnumerable<ITelemetry> LogEventsToMetricTelemetryConverter(LogEvent serilogLogEvent, IFormatProvider formatProvider, TelemetryClient telemetryClient)
+private class CustomConverter : TraceTelemetryConverter
 {
-    var metricTelemetry = new MetricTelemetry(/* ...*/);
-    // forward properties from logEvent or ignore them altogether...
-    yield return metricTelemetry;
-
-    var traceTelemetry = new TraceTelemetry(/* ...*/);
-    // forward properties from logEvent or ignore them altogether...
-    yield return traceTelemetry;
-
-	//...
-}
-```
-
-.. or alternatively by using the built-in, default TraceTelemetry generation logic, but adapt the Telemetry's Context to include a UserId, operation_Id and operation_parentId when those properties is available. By setting operation id the gui in azure will display all loggs from that operation when that item is selected:
-
-
-```csharp
-public static void Main()
-{
-    var log = new LoggerConfiguration()
-        .WriteTo
-        .ApplicationInsights("<MyApplicationInsightsInstrumentationKey>", ConvertLogEventsToCustomTraceTelemetry)
-        .CreateLogger();
-}
-
-
-
-private static ITelemetry ConvertLogEventsToCustomTraceTelemetry(LogEvent logEvent, IFormatProvider formatProvider)
-{
-    // first create a default TraceTelemetry using the sink's default logic
-    // .. but without the log level, and (rendered) message (template) included in the Properties
-    var telemetry = GetTelemetry(logEvent, formatProvider);
-
-    // then go ahead and post-process the telemetry's context to contain the user id as desired
-    if (logEvent.Properties.ContainsKey("UserId"))
+    public override IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
     {
-        telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
-    }
-    // post-process the telemetry's context to contain the operation id
-    if (logEvent.Properties.ContainsKey("operation_Id"))
-    {
-        telemetry.Context.Operation.Id = logEvent.Properties["operation_Id"].ToString();
-    }
-    // post-process the telemetry's context to contain the operation parent id
-    if (logEvent.Properties.ContainsKey("operation_parentId"))
-    {
-        telemetry.Context.Operation.ParentId = logEvent.Properties["operation_parentId"].ToString();
-    }
-    // typecast to ISupportProperties so you can manipulate the properties as desired
-    ISupportProperties propTelematry = (ISupportProperties)telemetry;
+        // first create a default TraceTelemetry using the sink's default logic
+        // .. but without the log level, and (rendered) message (template) included in the Properties
+        foreach (ITelemetry telemetry in base.Convert(logEvent, formatProvider))
+        {
+            // then go ahead and post-process the telemetry's context to contain the user id as desired
+            if (logEvent.Properties.ContainsKey("UserId"))
+            {
+                telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
+            }
+            // post-process the telemetry's context to contain the operation id
+            if (logEvent.Properties.ContainsKey("operation_Id"))
+            {
+                telemetry.Context.Operation.Id = logEvent.Properties["operation_Id"].ToString();
+            }
+            // post-process the telemetry's context to contain the operation parent id
+            if (logEvent.Properties.ContainsKey("operation_parentId"))
+            {
+                telemetry.Context.Operation.ParentId = logEvent.Properties["operation_parentId"].ToString();
+            }
+            // typecast to ISupportProperties so you can manipulate the properties as desired
+            ISupportProperties propTelematry = (ISupportProperties)telemetry;
 
-    // find redundent properties
-    var removeProps = new[] { "UserId", "operation_parentId", "operation_Id" };
-    removeProps = removeProps.Where(prop => propTelematry.Properties.ContainsKey(prop)).ToArray();
+            // find redundent properties
+            var removeProps = new[] { "UserId", "operation_parentId", "operation_Id" };
+            removeProps = removeProps.Where(prop => propTelematry.Properties.ContainsKey(prop)).ToArray();
 
-    foreach (var prop in removeProps)
-    {
-        // remove redundent properties
-        propTelematry.Properties.Remove(prop);
-    }	
-    return telemetry;
-}
+            foreach (var prop in removeProps)
+            {
+                // remove redundent properties
+                propTelematry.Properties.Remove(prop);
+            }
 
-private static ITelemetry GetTelemetry(LogEvent logEvent, IFormatProvider formatProvider)
-{
-    if (logEvent.Exception != null) {
-        // Exception telemetry
-        return logEvent.ToDefaultExceptionTelemetry(
-        formatProvider,
-        includeLogLevelAsProperty: false,
-        includeRenderedMessageAsProperty: false,
-        includeMessageTemplateAsProperty: false);
-    }
-    else {
-        // default telemetry
-        return logEvent.ToDefaultTraceTelemetry(
-        formatProvider,
-        includeLogLevelAsProperty: false,
-        includeRenderedMessageAsProperty: false,
-        includeMessageTemplateAsProperty: false);
+            yield return telemetry;
+        }
     }
 }
-
 ```
 
 If you want to skip sending a particular LogEvent, just return `null` from your own converter method.
 
+### Customising included properties
+
+The easiest way to customise included properties is to subclass one of the `ITelemetryConverter` implementations. For instance, let's include `renderedMessage` in event telemetry:
+
+```csharp
+private class IncludeRenderedMessageConverter : EventTelemetryConverter
+{
+    public override void ForwardPropertiesToTelemetryProperties(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
+    {
+        base.ForwardPropertiesToTelemetryProperties(logEvent, telemetryProperties, formatProvider,
+            includeLogLevel: false,
+            includeRenderedMessage: true,
+            includeMessageTemplate: false);
+    }
+}
+```
 
 ## How, When and Why to Flush Messages Manually
 		
@@ -191,7 +192,7 @@ _telemetryClient = new TelemetryClient()
 ```csharp
 var log = new LoggerConfiguration()
     .WriteTo
-	.ApplicationInsightsEvents(telemetryClient)
+	.ApplicationInsights(new TelemetryConfiguration(_telemetryClient), TelemetryConverter.Events)
     .CreateLogger();
 ```
 
@@ -211,7 +212,6 @@ await Task.Delay(1000);
 System.Threading.Thread.Sleep(1000);
 
 ```
-
 
 ## Using with Azure Functions
 
