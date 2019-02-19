@@ -3,6 +3,7 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Events;
+using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,33 +15,12 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
     {
         private readonly UnitTestTelemetryChannel _channel;
 
-        protected ApplicationInsightsTest(Func<LogEvent, IFormatProvider, ITelemetry> conversion)
+        protected ApplicationInsightsTest(ITelemetryConverter converter = null)
         {
             var tc = new TelemetryConfiguration("", _channel = new UnitTestTelemetryChannel());
 
             Logger = new LoggerConfiguration()
-                .WriteTo.ApplicationInsights(tc, conversion)
-                .MinimumLevel.Debug()
-                .CreateLogger();
-
-        }
-
-        protected ApplicationInsightsTest(Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> conversion)
-        {
-            var tc = new TelemetryConfiguration("", _channel = new UnitTestTelemetryChannel());
-
-            Logger = new LoggerConfiguration()
-                .WriteTo.ApplicationInsights(tc, conversion)
-                .MinimumLevel.Debug()
-                .CreateLogger();
-        }
-
-        protected ApplicationInsightsTest()
-        {
-            var tc = new TelemetryConfiguration("", _channel = new UnitTestTelemetryChannel());
-
-            Logger = new LoggerConfiguration()
-                .WriteTo.ApplicationInsightsTraces(tc)
+                .WriteTo.ApplicationInsights(tc, converter ?? TelemetryConverter.Traces)
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .CreateLogger();

@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------// Copyright 2016 Serilog Contributors
+﻿// Copyright 2016 Serilog Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,8 +48,6 @@ namespace Serilog.ExtensionMethods
         private static readonly IValueFormatter _defaultFormatter = new ApplicationInsightsDefaultValueFormatter();
         private static readonly IValueFormatter _jsonFormatter = new ApplicationInsightsJsonValueFormatter();
 
-
-
         /// <summary>
         /// Forwards all <see cref="LogEvent" /> data to the <paramref name="telemetryProperties" /> including the log level,
         /// rendered message, message template and all <paramref name="logEvent" /> properties to the telemetry.
@@ -64,41 +62,33 @@ namespace Serilog.ExtensionMethods
         /// <param name="includeMessageTemplate">if set to <c>true</c> the <see cref="LogEvent.MessageTemplate"/> is added to the
         /// <paramref name="telemetryProperties"/> using the <see cref="TelemetryPropertiesMessageTemplate"/> key.</param>
         /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="logEvent" /> or <paramref name="telemetryProperties" /> is null.</exception>
-        [Obsolete("this method will be removed in next versions, please use an overload with ApplicationInsightsOptions instead")]
         public static void ForwardPropertiesToTelemetryProperties(this LogEvent logEvent,
             ISupportProperties telemetryProperties,
             IFormatProvider formatProvider,
-            bool includeLogLevel = true,
-            bool includeRenderedMessage = true,
-            bool includeMessageTemplate = true,
-            bool useJsonFormatter = false)
+            bool includeLogLevel,
+            bool includeRenderedMessage,
+            bool includeMessageTemplate,
+            bool useJsonFormatter)
         {
-        }
-
-        public static void ForwardPropertiesToTelemetryProperties(this LogEvent logEvent,
-            ISupportProperties telemetryProperties,
-            IFormatProvider formatProvider,
-            ApplicationInsightsOptions options)
-        { 
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
             if (telemetryProperties == null) throw new ArgumentNullException(nameof(telemetryProperties));
 
-            if (options.IncludeLogLevel)
+            if (includeLogLevel)
             {
                 telemetryProperties.Properties.Add(TelemetryPropertiesLogLevel, logEvent.Level.ToString());
             }
 
-            if (options.IncludeRenderedMessage)
+            if (includeRenderedMessage)
             {
                 telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, logEvent.RenderMessage(formatProvider));
             }
 
-            if (options.IncludeMessageTemplate)
+            if (includeMessageTemplate)
             {
                 telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
             }
 
-            IValueFormatter formatter = options.UseJsonFormatter ? _jsonFormatter : _defaultFormatter;
+            IValueFormatter formatter = useJsonFormatter ? _jsonFormatter : _defaultFormatter;
 
             foreach (KeyValuePair<string, LogEventPropertyValue> property in logEvent.Properties.Where(property => property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))
             {
@@ -224,7 +214,8 @@ namespace Serilog.ExtensionMethods
                 formatProvider,
                 includeLogLevelAsProperty,
                 includeRenderedMessageAsProperty,
-                includeMessageTemplateAsProperty);
+                includeMessageTemplateAsProperty,
+                false);
 
             return telemetry;
         }

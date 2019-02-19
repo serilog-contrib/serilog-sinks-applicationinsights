@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
-using System.Collections.Generic;
+using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters;
 
 namespace Serilog
 {
+    public static class TelemetryConverter
+    {
+        public static ITelemetryConverter Traces => new TraceTelemetryConverter();
+    }
+
     /// <summary>
     /// Adds the WriteTo.ApplicationInsights() extension method to <see cref="LoggerConfiguration"/>.
     /// </summary>
@@ -34,385 +37,41 @@ namespace Serilog
         /// using a custom <see cref="ITelemetry"/> converter / constructor.
         /// </summary>
         /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="instrumentationKey">Required Application Insights instrumentation key.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// This will be called for every <see cref="LogEvent" /> and is expected to either return a new <see cref="ITelemetry"/> instance that will be sent to AI
-        /// or <see langword="null" /> to drop the log event completely.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="logEventToTelemetryConverter" /> is <see langword="null" />.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException"><paramref name="instrumentationKey" /> cannot be empty or is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsights(
-            this LoggerSinkConfiguration loggerConfiguration,
-            string instrumentationKey,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (logEventToTelemetryConverter == null) throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), logEventToTelemetryConverter, formatProvider),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
-        /// using a custom <see cref="ITelemetry"/> converter / constructor.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="instrumentationKey">Required Application Insights instrumentation key.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// This will be called for every <see cref="LogEvent" /> and is expected to either return a new <see cref="ITelemetry"/> instance that will be sent to AI
-        /// or <see langword="null" /> to drop the log event completely.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="logEventToTelemetryConverter" /> is <see langword="null" />.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException"><paramref name="instrumentationKey" /> cannot be empty or is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsights(
-            this LoggerSinkConfiguration loggerConfiguration,
-            string instrumentationKey,
-            Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (logEventToTelemetryConverter == null) throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), logEventToTelemetryConverter, formatProvider),
-                restrictedToMinimumLevel);
-        }
-
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
-        /// using a custom <see cref="ITelemetry"/> converter / constructor.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
         /// <param name="telemetryConfiguration">Required Application Insights configuration settings.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// This will be called for every <see cref="LogEvent" /> and is expected to either return a new <see cref="ITelemetry"/> instance that will be sent to AI
-        /// or <see langword="null" /> to drop the log event completely.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="logEventToTelemetryConverter" /> is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsights(
-            this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryConfiguration telemetryConfiguration,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryConfiguration == null) throw new ArgumentNullException(nameof(telemetryConfiguration));
-            if (logEventToTelemetryConverter == null) throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), logEventToTelemetryConverter, formatProvider),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
-        /// using a custom <see cref="ITelemetry"/> converter / constructor.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="telemetryConfiguration">Required Application Insights configuration settings.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// This will be called for every <see cref="LogEvent" /> and is expected to either return a new <see cref="ITelemetry"/> instance that will be sent to AI
-        /// or <see langword="null" /> to drop the log event completely.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="logEventToTelemetryConverter" /> is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsights(
-            this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryConfiguration telemetryConfiguration,
-            Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryConfiguration == null) throw new ArgumentNullException(nameof(telemetryConfiguration));
-            if (logEventToTelemetryConverter == null) throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), logEventToTelemetryConverter, formatProvider),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
-        /// using a custom <see cref="ITelemetry"/> converter / constructor.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="telemetryClient">The telemetry client.</param>
-        /// <param name="restrictedToMinimumLevel">The restricted to minimum level.</param>
-        /// <param name="formatProvider">The format provider.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// This will be called for every <see cref="LogEvent" /> and is expected to either return a new <see cref="ITelemetry"/> instance that will be sent to AI
-        /// or <see langword="null" /> to drop the log event completely.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="logEventToTelemetryConverter" /> is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsights(
-            this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryClient telemetryClient,
-            Func<LogEvent, IFormatProvider, ITelemetry> logEventToTelemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
-            if (telemetryClient == null) throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsEventsSink(telemetryClient, formatProvider, logEventToTelemetryConverter),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
-        /// using a custom <see cref="ITelemetry"/> converter / constructor.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="telemetryClient">The telemetry client.</param>
-        /// <param name="restrictedToMinimumLevel">The restricted to minimum level.</param>
-        /// <param name="formatProvider">The format provider.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// This will be called for every <see cref="LogEvent" /> and is expected to either return a new <see cref="ITelemetry"/> instance that will be sent to AI
-        /// or <see langword="null" /> to drop the log event completely.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="logEventToTelemetryConverter" /> is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsights(
-            this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryClient telemetryClient,
-            Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>> logEventToTelemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
-            if (telemetryClient == null) throw new ArgumentNullException(nameof(logEventToTelemetryConverter));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsEventsSink(telemetryClient, formatProvider, logEventToTelemetryConverter),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights as <see cref="EventTelemetry"/>.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="instrumentationKey">Required Application Insights instrumentation key.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException"><paramref name="instrumentationKey" /> cannot be empty or is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsightsEvents(
-            this LoggerSinkConfiguration loggerConfiguration,
-            string instrumentationKey,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsEventsSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights as <see cref="EventTelemetry" />.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="telemetryConfiguration">Required Application Insights configuration settings.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// /// <exception cref="ArgumentNullException"><paramref name="telemetryConfiguration" /> is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsightsEvents(
-            this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryConfiguration telemetryConfiguration = null,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsEventsSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights as <see cref="EventTelemetry"/>.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="telemetryClient">The telemetry client.</param>
-        /// <param name="restrictedToMinimumLevel">The restricted to minimum level.</param>
-        /// <param name="formatProvider">The format provider.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// If none is provided, the Serilog LogEvents will be sent as AI Events including all Properties.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsightsEvents(
-            this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryClient telemetryClient,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsEventsSink(telemetryClient, formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights as <see cref="TraceTelemetry"/>.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="instrumentationKey">Required Application Insights instrumentation key.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// If none is provided, the Serilog LogEvents will be sent as AI Traces including all Properties.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException"><paramref name="instrumentationKey" /> cannot be empty or is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsightsTraces(
-            this LoggerSinkConfiguration loggerConfiguration,
-            string instrumentationKey,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsTracesSink(CreateTelemetryClientFromInstrumentationkey(instrumentationKey), formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights as <see cref="TraceTelemetry"/>.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="telemetryConfiguration">Required Application Insights configuration settings.</param>
-        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// If none is provided, the Serilog LogEvents will be sent as AI Traces including all Properties.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryConfiguration" /> is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsightsTraces(
-            this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryConfiguration telemetryConfiguration = null,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryConfiguration == null) telemetryConfiguration = TelemetryConfiguration.Active;
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsTracesSink(CreateTelemetryClientFromConfiguration(telemetryConfiguration), formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights as <see cref="TraceTelemetry"/>.
-        /// </summary>
-        /// <param name="loggerConfiguration">The logger configuration.</param>
-        /// <param name="telemetryClient">The telemetry client.</param>
-        /// <param name="restrictedToMinimumLevel">The restricted to minimum level.</param>
-        /// <param name="formatProvider">The format provider.</param>
-        /// <param name="logEventToTelemetryConverter">The <see cref="LogEvent" /> to <see cref="ITelemetry" /> converter.
-        /// If none is provided, the Serilog LogEvents will be sent as AI Traces including all Properties.</param>
-        /// <returns>
-        /// Logger configuration, allowing configuration to continue.
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="loggerConfiguration" /> is <see langword="null" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="telemetryClient" /> is <see langword="null" />.</exception>
-        public static LoggerConfiguration ApplicationInsightsTraces(
-            this LoggerSinkConfiguration loggerConfiguration,
-            TelemetryClient telemetryClient,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            IFormatProvider formatProvider = null)
-        {
-            if (loggerConfiguration == null) throw new ArgumentNullException(nameof(loggerConfiguration));
-            if (telemetryClient == null) throw new ArgumentNullException(nameof(telemetryClient));
-
-            return loggerConfiguration.Sink(
-                new ApplicationInsightsTracesSink(telemetryClient, formatProvider, (Func<LogEvent, IFormatProvider, TelemetryClient, IEnumerable<ITelemetry>>)null),
-                restrictedToMinimumLevel);
-        }
-
-        /// <summary>
-        /// Creates the telemetry client from a provided <paramref name="instrumentationKey"/>.
-        /// </summary>
-        /// <param name="instrumentationKey">The instrumentation key.</param>
+        /// <param name="telemetryConverter">Required telemetry converter.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentOutOfRangeException">instrumentationKey;Cannot be empty or null.</exception>
-        private static TelemetryClient CreateTelemetryClientFromInstrumentationkey(string instrumentationKey = "")
+        public static LoggerConfiguration ApplicationInsights(
+            this LoggerSinkConfiguration loggerConfiguration,
+            TelemetryConfiguration telemetryConfiguration,
+            ITelemetryConverter telemetryConverter)
         {
-            var telemetryClient = new TelemetryClient();
+            var client = new TelemetryClient(telemetryConfiguration ?? TelemetryConfiguration.Active);
 
-            if (string.IsNullOrWhiteSpace(instrumentationKey) == false)
+            return loggerConfiguration.Sink(new UniversalApplicationInsightsSink(client, telemetryConverter));
+        }
+
+        /// <summary>
+        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
+        /// using a custom <see cref="ITelemetry"/> converter / constructor. Only use in rare cases when your application doesn't
+        /// have already constructed AI telemetry configuration, which is extremely rare.
+        /// </summary>
+        /// <param name="loggerConfiguration">The logger configuration.</param>
+        /// <param name="instrumentationKey">Required Application Insights key.</param>
+        /// <param name="telemetryConverter">Required telemetry converter.</param>
+        /// <returns></returns>
+        public static LoggerConfiguration ApplicationInsights(
+            this LoggerSinkConfiguration loggerConfiguration,
+            string instrumentationKey,
+            ITelemetryConverter telemetryConverter)
+        {
+            var client = new TelemetryClient();
+
+            if (!string.IsNullOrWhiteSpace(instrumentationKey))
             {
-                telemetryClient.InstrumentationKey = instrumentationKey;
+                client.InstrumentationKey = instrumentationKey;
             }
 
-            return telemetryClient;
-        }
-
-        /// <summary>
-        /// Creates the telemetry client from the provided <paramref name="telemetryConfiguration"/>.
-        /// </summary>
-        /// <param name="telemetryConfiguration">The telemetry configuration.</param>
-        /// <returns>A new <see cref="TelemetryClient"/> if a <paramref name="telemetryConfiguration"/> was provided, otherwise the <see cref="TelemetryConfiguration.Active"/>.</returns>
-        private static TelemetryClient CreateTelemetryClientFromConfiguration(TelemetryConfiguration telemetryConfiguration = null)
-        {
-            return new TelemetryClient(telemetryConfiguration ?? TelemetryConfiguration.Active);
+            return loggerConfiguration.Sink(new UniversalApplicationInsightsSink(client, telemetryConverter));
         }
     }
 }
