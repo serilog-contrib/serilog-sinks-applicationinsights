@@ -34,16 +34,17 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         }
 
         [Fact]
-        public void Json_parameter_is_dotted_out()
+        public void Json_parameter_is_compact()
         {
             var position = new { Latitude = 25, Longitude = 134 };
             var elapsedMs = 34;
+            var numbers = new int[] { 1, 2, 3, 4 };
 
-            Logger.Information("Processed {@Position} in {Elapsed:000} ms., str {str}", position, elapsedMs, "test");
+            Logger.Information("Processed {@Position} in {Elapsed:000} ms., str {str}, numbers: {numbers}", position, elapsedMs, "test", numbers);
 
             Assert.Equal("34", LastSubmittedTraceTelemetry.Properties["Elapsed"]);
-            Assert.Equal("25", LastSubmittedTraceTelemetry.Properties["Position.Latitude"]);
-            Assert.Equal("134", LastSubmittedTraceTelemetry.Properties["Position.Longitude"]);
+            Assert.Equal("{\"Latitude\":25,\"Longitude\":134}", LastSubmittedTraceTelemetry.Properties["Position"]);
+            Assert.Equal("[1,2,3,4]", LastSubmittedTraceTelemetry.Properties["numbers"]);
         }
     }
 }

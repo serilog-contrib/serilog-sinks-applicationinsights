@@ -22,10 +22,6 @@ using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConve
 
 namespace Serilog
 {
-    public static class TelemetryConverter
-    {
-        public static ITelemetryConverter Traces => new TraceTelemetryConverter();
-    }
 
     /// <summary>
     /// Adds the WriteTo.ApplicationInsights() extension method to <see cref="LoggerConfiguration"/>.
@@ -47,7 +43,7 @@ namespace Serilog
         {
             var client = new TelemetryClient(telemetryConfiguration ?? TelemetryConfiguration.Active);
 
-            return loggerConfiguration.Sink(new UniversalApplicationInsightsSink(client, telemetryConverter));
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter));
         }
 
         /// <summary>
@@ -71,7 +67,7 @@ namespace Serilog
                 client.InstrumentationKey = instrumentationKey;
             }
 
-            return loggerConfiguration.Sink(new UniversalApplicationInsightsSink(client, telemetryConverter));
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter));
         }
     }
 }

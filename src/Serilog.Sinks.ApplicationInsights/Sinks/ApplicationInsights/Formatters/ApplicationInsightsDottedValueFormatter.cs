@@ -6,7 +6,7 @@ using Serilog.Events;
 
 namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.Formatters
 {
-    class ApplicationInsightsDefaultValueFormatter : IValueFormatter
+    public class ApplicationInsightsDottedValueFormatter : IValueFormatter
     {
         private static readonly IDictionary<Type, Action<string, object, IDictionary<string, string>>> LiteralWriters = new Dictionary
             <Type, Action<string, object, IDictionary<string, string>>>

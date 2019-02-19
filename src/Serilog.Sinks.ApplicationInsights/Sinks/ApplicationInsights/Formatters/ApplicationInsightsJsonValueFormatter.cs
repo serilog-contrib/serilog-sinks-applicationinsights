@@ -6,7 +6,7 @@ using Serilog.Formatting.Json;
 
 namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.Formatters
 {
-    class ApplicationInsightsJsonValueFormatter : IValueFormatter
+    public class ApplicationInsightsJsonValueFormatter : IValueFormatter
     {
         private readonly JsonValueFormatter _formatter = new JsonValueFormatter();
         private static readonly char[] TrimChars = new[] { '\"' };

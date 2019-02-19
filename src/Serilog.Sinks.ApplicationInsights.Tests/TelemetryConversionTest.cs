@@ -1,13 +1,10 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
+﻿using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
-using Serilog.ExtensionMethods;
 using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Xunit;
 
 namespace Serilog.Sinks.ApplicationInsights.Tests
@@ -24,7 +21,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         {
             Logger.Information("test");
 
-            Assert.Equal("converted!", LastSubmittedTraceTelemetry.Message);
+            Assert.Single(SubmittedTelemetry);
         }
 
         [Fact]
@@ -35,25 +32,20 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
             Assert.Equal(2, SubmittedTelemetry.Count(t => t is TraceTelemetry tt && tt.Message == "two"));
         }
 
-        private class CustomConverter : ITelemetryConverter
+        private class CustomConverter : TraceTelemetryConverter
         {
-            public IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
+            public override IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
             {
+                IEnumerable<ITelemetry> tt = base.Convert(logEvent, formatProvider);
+
                 if (logEvent.MessageTemplate.Text == "two")
                 {
-                    var tt = logEvent.ToDefaultTraceTelemetry(formatProvider);
-
-                    yield return tt;
-                    yield return tt;
+                    yield return tt.First();
+                    yield return tt.First();
                 }
                 else
                 {
-
-                    var tt = logEvent.ToDefaultTraceTelemetry(formatProvider);
-
-                    tt.Message = "converted!";
-
-                    yield return tt;
+                    yield return tt.First();
                 }
             }
         }
