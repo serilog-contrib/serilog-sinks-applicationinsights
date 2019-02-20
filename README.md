@@ -229,7 +229,7 @@ public static class MyFunctions
             {
                 Log.Logger = new LoggerConfiguration()
                     .Enrich.FromLogContext()
-                    .WriteTo.ApplicationInsightsTraces(config)
+                    .WriteTo.ApplicationInsights(config, TelemetryConverter.Traces)
                     .CreateLogger();
             }
         }
