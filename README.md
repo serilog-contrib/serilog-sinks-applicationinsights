@@ -192,7 +192,7 @@ _telemetryClient = new TelemetryClient()
 ```csharp
 var log = new LoggerConfiguration()
     .WriteTo
-	.ApplicationInsights(new TelemetryConfiguration(_telemetryClient), TelemetryConverter.Events)
+	.ApplicationInsights(_telemetryClient, TelemetryConverter.Events)
     .CreateLogger();
 ```
 

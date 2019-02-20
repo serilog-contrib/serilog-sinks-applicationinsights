@@ -48,6 +48,23 @@ namespace Serilog
 
         /// <summary>
         /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
+        /// using a custom <see cref="ITelemetry"/> converter / constructor.
+        /// </summary>
+        /// <param name="loggerConfiguration">The logger configuration.</param>
+        /// <param name="telemetryClient">Required Application Insights telemetry client.</param>
+        /// <param name="telemetryConverter">Required telemetry converter.</param>
+        /// <returns></returns>
+        public static LoggerConfiguration ApplicationInsights(
+            this LoggerSinkConfiguration loggerConfiguration,
+            TelemetryClient telemetryClient,
+            ITelemetryConverter telemetryConverter)
+        {
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(telemetryClient, telemetryConverter));
+        }
+
+
+        /// <summary>
+        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
         /// using a custom <see cref="ITelemetry"/> converter / constructor. Only use in rare cases when your application doesn't
         /// have already constructed AI telemetry configuration, which is extremely rare.
         /// </summary>
