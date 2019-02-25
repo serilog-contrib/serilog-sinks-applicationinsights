@@ -8,6 +8,9 @@ using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.Formatters;
 
 namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters
 {
+    /// <summary>
+    /// Base class for telemetry converters
+    /// </summary>
     public abstract class TelemetryConverterBase : ITelemetryConverter
     {
         /// The <see cref="LogEvent.Level"/> is forwarded to the underlying AI Telemetry and its .Properties using this key.
@@ -24,10 +27,18 @@ namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryC
         /// </summary>
         public const string TelemetryPropertiesRenderedMessage = "RenderedMessage";
 
+        /// <summary>
+        /// Property that is when included in log context, will be pushed out as AI operation ID.
+        /// </summary>
+        public const string OperationIdProperty = "operationId";
+
         public virtual IValueFormatter ValueFormatter { get; }
 
         public abstract IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider);
 
+        /// <summary>
+        /// Creates an instance of <see cref="TelemetryConverterBase"/> using default value formatter (<see cref="ApplicationInsightsJsonValueFormatter"/>).
+        /// </summary>
         public TelemetryConverterBase()
         {
             ValueFormatter = new ApplicationInsightsJsonValueFormatter();
@@ -98,6 +109,11 @@ namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryC
             if (includeMessageTemplate)
             {
                 telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
+            }
+
+            if (telemetryProperties is ITelemetry telemetry && logEvent.Properties.TryGetValue(OperationIdProperty, out LogEventPropertyValue operationId))
+            {
+                telemetry.Context.Operation.Id = operationId.ToString().Trim('\"');
             }
 
             foreach (KeyValuePair<string, LogEventPropertyValue> property in logEvent.Properties.Where(property => property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))

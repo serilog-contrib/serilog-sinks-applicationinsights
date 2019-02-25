@@ -15,11 +15,11 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         }
 
         [Fact]
-        public void Message_template_is_not_in_trace_custom_property()
+        public void Message_template_is_in_trace_custom_property()
         {
             Logger.Information("test");
 
-            Assert.False(LastSubmittedTraceTelemetry.Properties.ContainsKey("MessageTemplate"));
+            Assert.True(LastSubmittedTraceTelemetry.Properties.ContainsKey("MessageTemplate"));
         }
 
         [Fact]
@@ -45,6 +45,17 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
             Assert.Equal("34", LastSubmittedTraceTelemetry.Properties["Elapsed"]);
             Assert.Equal("{\"Latitude\":25,\"Longitude\":134}", LastSubmittedTraceTelemetry.Properties["Position"]);
             Assert.Equal("[1,2,3,4]", LastSubmittedTraceTelemetry.Properties["numbers"]);
+        }
+
+        [Fact]
+        public void OperationId_from_logContext_is_included()
+        {
+            using (LogContext.PushProperty("operationId", "myId1"))
+            {
+                Logger.Information("capture id?");
+
+                Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Operation.Id);
+            }
         }
     }
 }
