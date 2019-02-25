@@ -55,7 +55,10 @@ namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryC
             ISupportProperties telemetryProperties,
             IFormatProvider formatProvider)
         {
-            ForwardPropertiesToTelemetryProperties(logEvent, telemetryProperties, formatProvider, false, false, false);
+            ForwardPropertiesToTelemetryProperties(logEvent, telemetryProperties, formatProvider,
+                includeLogLevel: false,
+                includeRenderedMessage: false,
+                includeMessageTemplate: true);
         }
 
         /// <summary>

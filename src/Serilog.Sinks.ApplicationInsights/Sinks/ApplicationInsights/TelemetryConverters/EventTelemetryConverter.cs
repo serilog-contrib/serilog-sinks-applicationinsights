@@ -28,5 +28,13 @@ namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryC
                 yield return ToExceptionTelemetry(logEvent, formatProvider);
             }
         }
+
+        public override void ForwardPropertiesToTelemetryProperties(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
+        {
+            ForwardPropertiesToTelemetryProperties(logEvent, telemetryProperties, formatProvider,
+                includeLogLevel: false,
+                includeRenderedMessage: true,
+                includeMessageTemplate: false);
+        }
     }
 }

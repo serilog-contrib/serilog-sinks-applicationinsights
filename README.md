@@ -38,10 +38,12 @@ By default, trace telemetry submits:
 - **rendered message** in trace's standard *message* property.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
+- **messageTemplate** in *customDimensions*.
 - **custom log properties** as *customDimensions*.
 
 Event telemetry submits:
-- **message template** as *event name*
+- **message template** as *event name*.
+- **renderedMessage** in *customDimensions*.
 - **timestamp** in event's standard *timestamp* property.
 - **custom log properties** as *customDimensions*.
 
