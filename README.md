@@ -217,7 +217,7 @@ System.Threading.Thread.Sleep(1000);
 
 ## Including Operation ID
 
-Application Insight's Operation ID is pushed out if you set `operationId` LogEvent property. If it's present, AI's operation ID will be overriden by the valeu from this property.
+Application Insight's Operation ID is pushed out if you set `operationId` LogEvent property. If it's present, AI's operation ID will be overriden by the value from this property.
 
 ## Using with Azure Functions
 
