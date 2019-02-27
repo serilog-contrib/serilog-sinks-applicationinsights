@@ -34,7 +34,7 @@ var log = new LoggerConfiguration()
 
 ### Configuring with JSON
 
-```
+```json
 {
   "Serilog": {
     "Using": [
