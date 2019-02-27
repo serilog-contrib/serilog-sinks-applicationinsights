@@ -219,6 +219,22 @@ System.Threading.Thread.Sleep(1000);
 
 Application Insight's Operation ID is pushed out if you set `operationId` LogEvent property. If it's present, AI's operation ID will be overriden by the value from this property.
 
+This can be set like so:
+
+```csharp
+
+public class OperationIdEnricher : ILogEventEnricher
+{
+    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+    {
+        if (logEvent.Properties.TryGetValue("RequestId", out var requestId))
+        {
+            logEvent.AddPropertyIfAbsent(new LogEventProperty("operationId", requestId));
+        }
+    }
+}
+```
+
 ## Using with Azure Functions
 
 Azure functions has out of the box integration with Application Insights, which automatically logs funtions execution start, end, and any exception. Please refer to the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to enable it.
