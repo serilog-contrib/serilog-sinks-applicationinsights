@@ -32,7 +32,9 @@ var log = new LoggerConfiguration()
 
 **Note:** Whether you choose `Events` or `Traces`, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
 
-### Configuring with JSON
+### Configuring with ReadFrom.Configuration()
+
+The following configuration shows how to create an ApplicationInsights sink with [ReadFrom.Configuration(configuration)](https://github.com/serilog/serilog-settings-configuration) - the telemetry converter has to be specified with the full type name and the assembly name: 
 
 ```json
 {
