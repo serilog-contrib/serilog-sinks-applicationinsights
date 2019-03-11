@@ -254,7 +254,7 @@ Application Insight's Operation ID is pushed out if you set `operationId` LogEve
 
 ## Using with Azure Functions
 
-Azure functions has out of the box integration with Application Insights, which automatically logs funtions execution start, end, and any exception. Please refer to the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to enable it.
+Azure functions has out of the box integration with Application Insights, which automatically logs functions execution start, end, and any exception. Please refer to the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to enable it.
 
 This sink can enrich AI messages, preserving *operation_Id* and other context information which is *already provided by functions runtime*. The easiest way to configure Serilog in this case is to use **TelemetryConfiguration.Active** which is already properly configured. You can, for instance, initialise logging in the static constructor:
 
