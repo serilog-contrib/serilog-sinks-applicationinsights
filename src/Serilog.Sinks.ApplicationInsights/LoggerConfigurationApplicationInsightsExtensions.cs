@@ -49,6 +49,25 @@ namespace Serilog
         }
 
         /// <summary>
+        /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights
+        /// using the active <see cref="TelemetryConfiguration"/>
+        /// </summary>
+        /// <param name="loggerConfiguration">The logger configuration.</param>
+        /// <param name="telemetryConverter">Required telemetry converter.</param>
+        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
+        /// <returns></returns>
+        public static LoggerConfiguration ApplicationInsights(
+            this LoggerSinkConfiguration loggerConfiguration,
+            ITelemetryConverter telemetryConverter,
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+        {
+
+            var client = new TelemetryClient(TelemetryConfiguration.Active);
+
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter), restrictedToMinimumLevel);
+        }
+
+        /// <summary>
         /// Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights 
         /// using a custom <see cref="ITelemetry"/> converter / constructor.
         /// </summary>
