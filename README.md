@@ -52,7 +52,7 @@ The following configuration shows how to create an ApplicationInsights sink with
       {
         "Name": "ApplicationInsights",
         "Args": {
-          "instrumentationKey": "YOUR-KEY",
+          "restrictedToMinimumLevel": "Information",
           "telemetryConverter": "Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"
         }
       }
@@ -64,6 +64,10 @@ The following configuration shows how to create an ApplicationInsights sink with
   }
 }
 ```
+
+> As mentioned above you can also pass an *instrumentation key* but it's actively discouraged
+
+**Note**: restrictedToMinimumLevel can be omitted since it is defaulted to LevelAlias.Minimum.
 
 ## What do we submit?
 
