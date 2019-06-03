@@ -1,5 +1,5 @@
-using Microsoft.ApplicationInsights.Channel;
 using Serilog.Context;
+using Serilog.ExtensionMethods;
 using Xunit;
 
 namespace Serilog.Sinks.ApplicationInsights.Tests
@@ -7,19 +7,27 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
     public class FormattingTests : ApplicationInsightsTest
     {
         [Fact]
-        public void Log_level_is_not_in_trace_custom_property()
+        public void Log_level_is_in_trace_custom_property()
         {
             Logger.Information("test");
 
-            Assert.False(LastSubmittedTraceTelemetry.Properties.ContainsKey("LogLevel"));
+            Assert.True(LastSubmittedTraceTelemetry.Properties.ContainsKey(LogEventExtensions.TelemetryPropertiesLogLevel));
         }
 
         [Fact]
-        public void Message_template_is_not_in_trace_custom_property()
+        public void Rendered_message_is_not_in_trace_custom_property()
         {
             Logger.Information("test");
 
-            Assert.False(LastSubmittedTraceTelemetry.Properties.ContainsKey("MessageTemplate"));
+            Assert.False(LastSubmittedTraceTelemetry.Properties.ContainsKey(LogEventExtensions.TelemetryPropertiesRenderedMessage));
+        }
+
+        [Fact]
+        public void Message_template_is_in_trace_custom_property()
+        {
+            Logger.Information("test");
+
+            Assert.True(LastSubmittedTraceTelemetry.Properties.ContainsKey(LogEventExtensions.TelemetryPropertiesMessageTemplate));
         }
 
         [Fact]

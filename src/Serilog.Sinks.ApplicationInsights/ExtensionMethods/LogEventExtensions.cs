@@ -179,9 +179,9 @@ namespace Serilog.ExtensionMethods
         public static TraceTelemetry ToDefaultTraceTelemetry(
             this LogEvent logEvent,
             IFormatProvider formatProvider,
-            bool includeLogLevelAsProperty = false,
+            bool includeLogLevelAsProperty = true,
             bool includeRenderedMessageAsProperty = false,
-            bool includeMessageTemplateAsProperty = false)
+            bool includeMessageTemplateAsProperty = true)
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
