@@ -29,7 +29,7 @@ namespace Serilog.Sinks.ApplicationInsights
     /// Base class for Microsoft Azure Application Insights based Sinks.
     /// Inspired by their NLog Appender implementation.
     /// </summary>
-    class ApplicationInsightsSink : ILogEventSink, IDisposable
+    public class ApplicationInsightsSink : ILogEventSink, IDisposable
     {
         private long _isDisposing = 0;
         private long _isDisposed = 0;
