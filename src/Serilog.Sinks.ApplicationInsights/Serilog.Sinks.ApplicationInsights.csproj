@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Description>Serilog event sink that writes to Microsoft Application Insights.</Description>
     <VersionPrefix>2.5.0</VersionPrefix>
-    <Authors>Joerg Battermann</Authors>
-    <TargetFrameworks>net45;netstandard1.3;netstandard1.6</TargetFrameworks>
+    <Authors>Joerg Battermann, Ivan Gavryliuk</Authors>
+    <TargetFrameworks>net45;netstandard1.3;netstandard1.6;netstandard2.0</TargetFrameworks>
     <AssemblyName>Serilog.Sinks.ApplicationInsights</AssemblyName>
     <AssemblyOriginatorKeyFile>../../assets/Serilog.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -20,7 +20,7 @@
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>3.0.3</Version>
+    <Version>3.0.4</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
@@ -29,7 +29,7 @@
 
   <ItemGroup>
     <PackageReference Include="Serilog" Version="2.8.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.9.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.10.0" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
