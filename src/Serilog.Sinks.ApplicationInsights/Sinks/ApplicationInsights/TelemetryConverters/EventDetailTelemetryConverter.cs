@@ -5,7 +5,7 @@ using Serilog.Events;
 namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters
 {
     /// <summary>
-    /// Similar to Events, however it allowes loggin LogLevel and Template
+    /// Similar to Events, however it allowes logging LogLevel and Template
     /// </summary>
     public class EventDetailTelemetryConverter : EventTelemetryConverter
     {

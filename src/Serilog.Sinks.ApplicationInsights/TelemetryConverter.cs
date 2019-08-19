@@ -23,7 +23,7 @@ namespace Serilog
         public static ITelemetryConverter Events => new EventTelemetryConverter();
 
         /// <summary>
-        /// Similar to Events, however it allowes loggin LogLevel and Template
+        /// Similar to Events, however it allowes logging LogLevel and Template
         /// </summary>
         public static ITelemetryConverter EventsDetailed => new EventDetailTelemetryConverter();
     }
