@@ -21,5 +21,7 @@ namespace Serilog
         public static ITelemetryConverter Traces => new TraceTelemetryConverter();
 
         public static ITelemetryConverter Events => new EventTelemetryConverter();
+
+        public static ITelemetryConverter EventsDetailed => new EventDetailTelemetryConverter();
     }
 }
