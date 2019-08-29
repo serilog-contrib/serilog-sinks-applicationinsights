@@ -32,6 +32,11 @@ namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryC
         /// </summary>
         public const string OperationIdProperty = "operationId";
 
+        /// <summary>
+        /// Property that is when included in log context, will be pushed out as AI session ID.
+        /// </summary>
+        public const string SessionIdProperty = "sessionId";
+
         public virtual IValueFormatter ValueFormatter { get; }
 
         public abstract IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider);
@@ -111,9 +116,17 @@ namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryC
                 telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
             }
 
-            if (telemetryProperties is ITelemetry telemetry && logEvent.Properties.TryGetValue(OperationIdProperty, out LogEventPropertyValue operationId))
+            if (telemetryProperties is ITelemetry telemetry)
             {
-                telemetry.Context.Operation.Id = operationId.ToString().Trim('\"');
+                if (logEvent.Properties.TryGetValue(OperationIdProperty, out LogEventPropertyValue operationId))
+                {
+                    telemetry.Context.Operation.Id = operationId.ToString().Trim('\"');
+                }
+
+                if (logEvent.Properties.TryGetValue(SessionIdProperty, out LogEventPropertyValue sessionId))
+                {
+                    telemetry.Context.Session.Id = sessionId.ToString().Trim('\"');
+                }
             }
 
             foreach (KeyValuePair<string, LogEventPropertyValue> property in logEvent.Properties.Where(property => property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))

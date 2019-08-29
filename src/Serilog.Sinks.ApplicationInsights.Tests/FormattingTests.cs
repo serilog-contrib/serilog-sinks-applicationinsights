@@ -1,4 +1,3 @@
-using Microsoft.ApplicationInsights.Channel;
 using Serilog.Context;
 using Xunit;
 
@@ -55,6 +54,17 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
                 Logger.Information("capture id?");
 
                 Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Operation.Id);
+            }
+        }
+
+        [Fact]
+        public void SessionId_from_logContext_is_included()
+        {
+            using (LogContext.PushProperty("sessionId", "myId1"))
+            {
+                Logger.Information("capture id?");
+
+                Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Session.Id);
             }
         }
     }
