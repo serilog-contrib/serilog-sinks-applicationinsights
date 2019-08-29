@@ -23,7 +23,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         }
 
         [Fact]
-        public void Message_properies_include_log_context()
+        public void Message_properties_include_log_context()
         {
             using (LogContext.PushProperty("custom1", "value1"))
             {
