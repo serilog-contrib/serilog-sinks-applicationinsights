@@ -272,6 +272,10 @@ public class OperationIdEnricher : ILogEventEnricher
 }
 ```
 
+## Including Session ID
+
+Application Insight's Session ID is pushed out if you set `sessionId` LogEvent property. If it's present, AI's session ID will be overriden by the value from this property.
+
 ## Using with Azure Functions
 
 Azure functions has out of the box integration with Application Insights, which automatically logs functions execution start, end, and any exception. Please refer to the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to enable it.
