@@ -28,9 +28,14 @@ namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryC
         public const string TelemetryPropertiesRenderedMessage = "RenderedMessage";
 
         /// <summary>
-        /// Property that is when included in log context, will be pushed out as AI operation ID.
+        /// Property that is included when in log context, will be pushed out as AI operation ID.
         /// </summary>
         public const string OperationIdProperty = "operationId";
+
+        /// <summary>
+        /// Property that is included when in log context, will be pushed out as AI component version.
+        /// </summary>
+        public const string VersionProperty = "version";
 
         public virtual IValueFormatter ValueFormatter { get; }
 
@@ -111,9 +116,18 @@ namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryC
                 telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
             }
 
-            if (telemetryProperties is ITelemetry telemetry && logEvent.Properties.TryGetValue(OperationIdProperty, out LogEventPropertyValue operationId))
+            if (telemetryProperties is ITelemetry telemetry)
             {
-                telemetry.Context.Operation.Id = operationId.ToString().Trim('\"');
+                if (logEvent.Properties.TryGetValue(OperationIdProperty, out LogEventPropertyValue operationId))
+                {
+                    telemetry.Context.Operation.Id = operationId.ToString().Trim('\"');
+                }
+
+                if (logEvent.Properties.TryGetValue(VersionProperty, out LogEventPropertyValue version)
+                    && telemetry.Context?.Component != null)
+                {
+                    telemetry.Context.Component.Version = version.ToString().Trim('\"');
+                }
             }
 
             foreach (KeyValuePair<string, LogEventPropertyValue> property in logEvent.Properties.Where(property => property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))
