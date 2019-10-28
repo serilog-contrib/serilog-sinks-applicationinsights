@@ -57,5 +57,16 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
                 Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Operation.Id);
             }
         }
+
+        [Fact]
+        public void Version_from_logContext_is_included()
+        {
+            using (LogContext.PushProperty("version", "myId1"))
+            {
+                Logger.Information("capture id?");
+
+                Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Component.Version);
+            }
+        }
     }
 }

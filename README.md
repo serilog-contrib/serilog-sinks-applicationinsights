@@ -272,6 +272,10 @@ public class OperationIdEnricher : ILogEventEnricher
 }
 ```
 
+## Including Version
+
+Application Insight supports component version and is pushed out if you set `version` LogEvent property. If it's present, AI's operation version will include the value from this property.
+
 ## Using with Azure Functions
 
 Azure functions has out of the box integration with Application Insights, which automatically logs functions execution start, end, and any exception. Please refer to the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to enable it.
