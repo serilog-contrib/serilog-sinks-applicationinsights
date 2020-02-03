@@ -13,7 +13,7 @@ The simplest way to configure Serilog to send data to a ApplicationInsights dash
 ```csharp
 var log = new LoggerConfiguration()
     .WriteTo
-	.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Traces)
+	.ApplicationInsights(TelemetryConfiguration.CreateDefault(), TelemetryConverter.Traces)
     .CreateLogger();
 ```
 
@@ -24,7 +24,7 @@ var log = new LoggerConfiguration()
 ```csharp
 var log = new LoggerConfiguration()
     .WriteTo
-	.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Events)
+	.ApplicationInsights(TelemetryConfiguration.CreateDefault(), TelemetryConverter.Events)
     .CreateLogger();
 ```
 
