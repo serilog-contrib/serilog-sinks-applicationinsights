@@ -36,7 +36,7 @@ var log = new LoggerConfiguration()
 
 The singleton [`TelemetryConfiguration.Active` has been deprecated in the Application Insights SDK on .NET Core in favor of dependency injection pattern](https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152).
 
-Therefore, now we need to pass in the `TelemetryConfiguration` instance that was added by `services.AddApplicationInsightsTelemetry()` during Startup in `ConfigureServices`.
+Therefore, now we need to pass in the `TelemetryConfiguration` instance that was added either by `services.AddApplicationInsightsTelemetryWorkerService()` (if you're developing a [non-http applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/worker-service)) or `services.AddApplicationInsightsTelemetry()` (if you're developing an [ASP.Net Core applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core)) during Startup in `ConfigureServices`.
 
 ```csharp
 var log = new LoggerConfiguration()
