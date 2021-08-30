@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>Serilog event sink that writes to Microsoft Application Insights.</Description>
-    <VersionPrefix>2.5.0</VersionPrefix>
+    <VersionPrefix>3.1.1</VersionPrefix>
     <Authors>Joerg Battermann, Ivan Gavryliuk</Authors>
     <TargetFrameworks>net45;netstandard1.3;netstandard1.6;netstandard2.0</TargetFrameworks>
     <AssemblyName>Serilog.Sinks.ApplicationInsights</AssemblyName>
@@ -20,7 +20,6 @@
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>3.1.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">

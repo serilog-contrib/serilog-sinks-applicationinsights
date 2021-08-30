@@ -16,7 +16,7 @@ $commitHash = $(git rev-parse --short HEAD)
 $buildSuffix = @{ $true = "$($suffix)-$($commitHash)"; $false = "$($branch)-$($commitHash)" }[$suffix -ne ""]
 
 echo "build: Package version suffix is $suffix"
-echo "build: Build version suffix is $buildSuffix" 
+echo "build: Build version suffix is $buildSuffix"
 
 foreach ($src in ls src/*) {
     Push-Location $src
@@ -25,12 +25,23 @@ foreach ($src in ls src/*) {
 
     & dotnet build -c Release --version-suffix=$buildSuffix
 
-    if ($suffix) {
-         & dotnet pack -c Release --include-source --no-build -o ..\..\artifacts --version-suffix=$suffix
+    if($suffix) {
+        & dotnet pack -c Release --include-source --no-build -o ..\..\artifacts --version-suffix=$suffix
     } else {
-         & dotnet pack -c Release --include-source --no-build -o ..\..\artifacts
-    }   
-    if($LASTEXITCODE -ne 0) { exit 1 }    
+        & dotnet pack -c Release --include-source --no-build -o ..\..\artifacts
+    }
+    if($LASTEXITCODE -ne 0) { exit 1 }
+
+    Pop-Location
+}
+
+foreach ($test in ls test/*.Tests) {
+    Push-Location $test
+
+	echo "build: Testing project in $test"
+
+    & dotnet test -c Release
+    if($LASTEXITCODE -ne 0) { exit 3 }
 
     Pop-Location
 }

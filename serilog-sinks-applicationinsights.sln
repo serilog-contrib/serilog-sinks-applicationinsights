@@ -17,7 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{E9D1B5
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.ApplicationInsights", "src\Serilog.Sinks.ApplicationInsights\Serilog.Sinks.ApplicationInsights.csproj", "{B572E129-3568-435F-A8E9-366AD7014D8E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.ApplicationInsights.Tests", "src\Serilog.Sinks.ApplicationInsights.Tests\Serilog.Sinks.ApplicationInsights.Tests.csproj", "{B20E07E8-FA9F-4CC4-926D-2A23A4BF9EF3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7D3C2A24-D009-41B5-B68D-2B87F7C017FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Sinks.ApplicationInsights.Tests", "test\Serilog.Sinks.ApplicationInsights.Tests\Serilog.Sinks.ApplicationInsights.Tests.csproj", "{94A45A9E-5576-4B49-A769-DD62B83B25A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,17 +31,17 @@ Global
 		{B572E129-3568-435F-A8E9-366AD7014D8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B572E129-3568-435F-A8E9-366AD7014D8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B572E129-3568-435F-A8E9-366AD7014D8E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B20E07E8-FA9F-4CC4-926D-2A23A4BF9EF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B20E07E8-FA9F-4CC4-926D-2A23A4BF9EF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B20E07E8-FA9F-4CC4-926D-2A23A4BF9EF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B20E07E8-FA9F-4CC4-926D-2A23A4BF9EF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94A45A9E-5576-4B49-A769-DD62B83B25A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94A45A9E-5576-4B49-A769-DD62B83B25A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94A45A9E-5576-4B49-A769-DD62B83B25A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94A45A9E-5576-4B49-A769-DD62B83B25A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B572E129-3568-435F-A8E9-366AD7014D8E} = {037440DE-440B-4129-9F7A-09B42D00397E}
-		{B20E07E8-FA9F-4CC4-926D-2A23A4BF9EF3} = {037440DE-440B-4129-9F7A-09B42D00397E}
+		{94A45A9E-5576-4B49-A769-DD62B83B25A2} = {7D3C2A24-D009-41B5-B68D-2B87F7C017FB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08126E49-8621-4994-8B2C-DF15B3D9A881}
