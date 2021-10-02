@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>Serilog event sink that writes to Microsoft Application Insights.</Description>
@@ -28,8 +28,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Serilog" Version="2.8.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.15.0" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.18.0" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
