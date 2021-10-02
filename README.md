@@ -2,7 +2,7 @@
 
 A sink for Serilog that writes events to Microsoft Application Insights.
  
-[![Build status](https://ci.appveyor.com/api/projects/status/ccgd7k98kbmifl5v/branch/master?svg=true)](https://ci.appveyor.com/project/serilog/serilog-sinks-applicationinsights/branch/master) [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
+[![Build status](https://ci.appveyor.com/api/projects/status/ccgd7k98kbmifl5v/branch/dev?svg=true)](https://ci.appveyor.com/project/serilog/serilog-sinks-applicationinsights/branch/dev) [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
 
 This Sink comes with several defaults that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
 
