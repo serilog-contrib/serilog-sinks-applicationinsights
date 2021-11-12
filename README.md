@@ -32,6 +32,58 @@ var log = new LoggerConfiguration()
 
 **Note:** Whether you choose `Events` or `Traces`, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
 
+### TelemetryConfiguration.Active is deprecated in the App Insights SDK for .NET Core, what do I do?
+
+The singleton [`TelemetryConfiguration.Active` has been deprecated in the Application Insights SDK on .NET Core in favor of dependency injection pattern](https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152).
+
+Therefore, now we need to pass in the `TelemetryConfiguration` instance that was added either by `services.AddApplicationInsightsTelemetryWorkerService()` (if you're developing a [non-http applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/worker-service)) or `services.AddApplicationInsightsTelemetry()` (if you're developing an [ASP.Net Core applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core)) during Startup in `ConfigureServices`.
+
+```csharp
+var log = new LoggerConfiguration()
+    .WriteTo
+    .ApplicationInsights(serviceProvider.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces)
+    .CreateLogger();
+```
+
+However, you probably want to setup your Logger as close to the entry point of your application as possible, so that any startup errors can be caught and properly logged. The problem is that now we're in a chicken-and-egg situation: we want to setup the logger early, but we need the `TelemetryConfiguration` which still haven't been added to our DI container.
+
+Luckily [from version 4.0.x of the `Serilog.Extensions.Hosting` we have the possibility to configure a bootstrap logger](https://nblumhardt.com/2020/10/bootstrap-logger/) to capture early errors, and then change it using DI dependant services once they are configured.
+
+```csharp
+// dotnet add package serilog.extensions.hosting -v 4.0.0-*
+
+public static class Program
+{
+    public static void Main(string[] args)
+    {
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateBootstrapLogger();
+
+        try
+        {
+            CreateHostBuilder(args).Build().Run();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "An unhandled exception occured during bootstrapping");
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
+    }
+
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .UseSerilog((context, services, loggerConfiguration) =>
+                loggerConfiguration
+                    .WriteTo
+                    .ApplicationInsights(services.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces))
+            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
+}
+```
+
 ### Configuring with ReadFrom.Configuration()
 
 The following configuration shows how to create an ApplicationInsights sink with [ReadFrom.Configuration(configuration)](https://github.com/serilog/serilog-settings-configuration) - the telemetry converter has to be specified with the full type name and the assembly name: 
@@ -299,6 +351,6 @@ public static class MyFunctions
 }
 ```
 
-Copyright &copy; 2019 Serilog Contributors - Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
+Copyright &copy; 2021 Serilog Contributors - Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
 See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)
