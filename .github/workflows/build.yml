@@ -1,0 +1,21 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+      - name: Invoke Build.ps1 with PowerShell Core
+        shell: pwsh
+        run: ./Build.ps1
+      - name: Push
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
+        shell: pwsh
+        run: |
+          dotnet nuget push (get-item ./artifacts/*.nupkg).FullName --api-key="$env:NUGET_API_KEY" -s https://api.nuget.org/v3/index.json
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
