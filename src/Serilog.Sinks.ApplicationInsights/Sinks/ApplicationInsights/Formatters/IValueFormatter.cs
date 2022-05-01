@@ -1,7 +1,7 @@
-﻿using Serilog.Events;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Serilog.Events;
 
-namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.Formatters
+namespace Serilog.Sinks.ApplicationInsights.Formatters
 {
     public interface IValueFormatter
     {

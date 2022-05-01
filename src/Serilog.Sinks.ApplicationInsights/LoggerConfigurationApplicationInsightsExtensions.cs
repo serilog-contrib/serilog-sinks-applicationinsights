@@ -18,7 +18,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights;
-using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters;
+using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 namespace Serilog
 {

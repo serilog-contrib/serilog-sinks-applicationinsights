@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <Description>Serilog sink for Application Insights.</Description>
-    <VersionPrefix>3.1.1</VersionPrefix>
+    <VersionPrefix>4.0.0</VersionPrefix>
     <Authors>Joerg Battermann, Ivan Gavryliuk, contributors</Authors>
-    <TargetFrameworks>net452;net46;netstandard2.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net4.6.2;netstandard2.0;net6.0</TargetFrameworks>
     <AssemblyName>Serilog.Sinks.ApplicationInsights</AssemblyName>
     <AssemblyOriginatorKeyFile>../../assets/Serilog.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -17,20 +17,12 @@
     <RepositoryUrl>https://github.com/serilog-contrib/serilog-sinks-applicationinsights</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net452|AnyCPU'">
-    <DocumentationFile></DocumentationFile>
+    <RootNamespace>Serilog</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Serilog" Version="2.11.0" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.20.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <ItemGroup>

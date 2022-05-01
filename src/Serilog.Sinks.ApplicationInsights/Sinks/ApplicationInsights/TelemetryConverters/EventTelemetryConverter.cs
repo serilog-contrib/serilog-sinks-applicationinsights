@@ -4,7 +4,7 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
 
-namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters
+namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
 {
     public class EventTelemetryConverter : TelemetryConverterBase
     {

@@ -1,13 +1,9 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Channel;
+﻿using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
-using Serilog.Events;
-using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 namespace Serilog.Sinks.ApplicationInsights.Tests
 {
@@ -34,8 +30,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
 
         protected TraceTelemetry LastSubmittedTraceTelemetry => 
             _channel.SubmittedTelemetry
-                .Where(t => t is TraceTelemetry)
-                .Select(t => (TraceTelemetry)t)
+                .OfType<TraceTelemetry>()
                 .LastOrDefault();
 
     }

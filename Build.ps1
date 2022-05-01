@@ -20,19 +20,19 @@ $suffix = @{ $true = ""; $false = "$($branch.Substring(0, [math]::Min(10,$branch
 
 echo "build: Version suffix is $suffix"
 
-echo "build: Testing"
 & dotnet test -c Release "./test/$projectName.Tests/$projectName.Tests.csproj"
-if ($LASTEXITCODE -ne 0) { exit 3 }
+if ($LASTEXITCODE -ne 0) { throw "dotnet test failed" }
 
-echo "build: Publishing and packing"
 $src = "./src/$projectName"
+
+& dotnet build -c Release --version-suffix=$suffix "$src/$projectName.csproj"
+if ($LASTEXITCODE -ne 0) { throw "dotnet build failed" }
+
 if ($suffix) {
-    & dotnet publish -c Release -o "$src/obj/publish" --version-suffix=$suffix "$src/$projectName.csproj"
     & dotnet pack -c Release -o ./artifacts --no-build --version-suffix=$suffix "$src/$projectName.csproj"
 } else {
-    & dotnet publish -c Release -o "$src/obj/publish" "$src/$projectName.csproj"
     & dotnet pack -c Release -o ./artifacts --no-build "$src/$projectName.csproj"
 }
-if ($LASTEXITCODE -ne 0) { exit 1 }    
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed" }
 
 Pop-Location

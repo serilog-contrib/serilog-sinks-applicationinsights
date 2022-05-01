@@ -4,7 +4,7 @@ using Serilog.Debugging;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 
-namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.Formatters
+namespace Serilog.Sinks.ApplicationInsights.Formatters
 {
     public class ApplicationInsightsJsonValueFormatter : IValueFormatter
     {
