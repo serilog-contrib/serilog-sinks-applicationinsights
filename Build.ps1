@@ -21,7 +21,7 @@ $suffix = @{ $true = ""; $false = "$($branch.Substring(0, [math]::Min(10,$branch
 echo "build: Version suffix is $suffix"
 
 echo "build: Testing"
-& dotnet test -c Release "./test/$projectName/$projectName.Tests.csproj"
+& dotnet test -c Release "./test/$projectName.Tests/$projectName.Tests.csproj"
 if ($LASTEXITCODE -ne 0) { exit 3 }
 
 echo "build: Publishing and packing"
