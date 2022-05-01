@@ -16,6 +16,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog.Configuration;
+using Serilog.Core;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
@@ -36,16 +37,18 @@ namespace Serilog
         /// <param name="telemetryConfiguration">Required Application Insights configuration settings.</param>
         /// <param name="telemetryConverter">Required telemetry converter.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
+        /// <param name="levelSwitch">Logging level switch for this sink</param>
         /// <returns></returns>
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryConfiguration telemetryConfiguration,
             ITelemetryConverter telemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            LoggingLevelSwitch levelSwitch = null)
         {
             var client = new TelemetryClient(telemetryConfiguration ?? TelemetryConfiguration.Active);
 
-            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter), restrictedToMinimumLevel, levelSwitch);
         }
 
         /// <summary>
@@ -55,16 +58,18 @@ namespace Serilog
         /// <param name="loggerConfiguration">The logger configuration.</param>
         /// <param name="telemetryConverter">Required telemetry converter.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
+        /// <param name="levelSwitch">Logging level switch for this sink</param>
         /// <returns></returns>
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             ITelemetryConverter telemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            LoggingLevelSwitch levelSwitch = null)
         {
 
             var client = new TelemetryClient(TelemetryConfiguration.Active);
 
-            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter), restrictedToMinimumLevel, levelSwitch);
         }
 
         /// <summary>
@@ -75,14 +80,16 @@ namespace Serilog
         /// <param name="telemetryClient">Required Application Insights telemetry client.</param>
         /// <param name="telemetryConverter">Required telemetry converter.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
+        /// <param name="levelSwitch">Logging level switch for this sink</param>
         /// <returns></returns>
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             TelemetryClient telemetryClient,
             ITelemetryConverter telemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            LoggingLevelSwitch levelSwitch = null)
         {
-            return loggerConfiguration.Sink(new ApplicationInsightsSink(telemetryClient, telemetryConverter), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(telemetryClient, telemetryConverter), restrictedToMinimumLevel, levelSwitch);
         }
 
 
@@ -95,12 +102,14 @@ namespace Serilog
         /// <param name="instrumentationKey">Required Application Insights key.</param>
         /// <param name="telemetryConverter">Required telemetry converter.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
+        /// <param name="levelSwitch">Logging level switch for this sink</param>
         /// <returns></returns>
         public static LoggerConfiguration ApplicationInsights(
             this LoggerSinkConfiguration loggerConfiguration,
             string instrumentationKey,
             ITelemetryConverter telemetryConverter,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            LoggingLevelSwitch levelSwitch = null)
         {
             var client = new TelemetryClient();
 
@@ -109,7 +118,7 @@ namespace Serilog
                 client.InstrumentationKey = instrumentationKey;
             }
 
-            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter), restrictedToMinimumLevel, levelSwitch);
         }
     }
 }
