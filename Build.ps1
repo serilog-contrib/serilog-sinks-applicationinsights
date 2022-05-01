@@ -2,48 +2,37 @@ echo "build: Build started"
 
 Push-Location $PSScriptRoot
 
-if(Test-Path .\artifacts) {
-	echo "build: Cleaning .\artifacts"
-	Remove-Item .\artifacts -Force -Recurse
+if (Test-Path ./artifacts) {
+	echo "build: Cleaning ./artifacts"
+	Remove-Item ./artifacts -Force -Recurse
 }
 
+echo "build: Restoring"
 & dotnet restore --no-cache
+if($LASTEXITCODE -ne 0) { exit 1 }
 
-$branch = @{ $true = $env:APPVEYOR_REPO_BRANCH; $false = $(git symbolic-ref --short -q HEAD) }[$env:APPVEYOR_REPO_BRANCH -ne $NULL];
-$revision = @{ $true = "{0:00000}" -f [convert]::ToInt32("0" + $env:APPVEYOR_BUILD_NUMBER, 10); $false = "local" }[$env:APPVEYOR_BUILD_NUMBER -ne $NULL];
-$suffix = @{ $true = ""; $false = "$($branch.Substring(0, [math]::Min(10,$branch.Length)))-$revision"}[$branch -eq "master" -and $revision -ne "local"]
-$commitHash = $(git rev-parse --short HEAD)
-$buildSuffix = @{ $true = "$($suffix)-$($commitHash)"; $false = "$($branch)-$($commitHash)" }[$suffix -ne ""]
+$projectName = "Serilog.Sinks.ApplicationInsights"
+$ref = $env:GITHUB_REF ?? ""
+$run = $env:GITHUB_RUN_NUMBER ?? "0"
+$branch = @{ $true = $ref.Substring($ref.LastIndexOf("/") + 1); $false = $(git symbolic-ref --short -q HEAD) }[$ref -ne ""];
+$revision = @{ $true = "{0:00000}" -f [convert]::ToInt32("0" + $run, 10); $false = "local" }[$run -ne "0"];
+$suffix = @{ $true = ""; $false = "$($branch.Substring(0, [math]::Min(10,$branch.Length)))-$revision"}[$branch -eq "main" -and $revision -ne "local"]
 
-echo "build: Package version suffix is $suffix"
-echo "build: Build version suffix is $buildSuffix"
+echo "build: Version suffix is $suffix"
 
-foreach ($src in ls src/*) {
-    Push-Location $src
+& dotnet test -c Release "./test/$projectName.Tests/$projectName.Tests.csproj"
+if ($LASTEXITCODE -ne 0) { throw "dotnet test failed" }
 
-	echo "build: Packaging project in $src"
+$src = "./src/$projectName"
 
-    & dotnet build -c Release --version-suffix=$buildSuffix
+& dotnet build -c Release --version-suffix=$suffix "$src/$projectName.csproj"
+if ($LASTEXITCODE -ne 0) { throw "dotnet build failed" }
 
-    if($suffix) {
-        & dotnet pack -c Release --include-source --no-build -o ..\..\artifacts --version-suffix=$suffix
-    } else {
-        & dotnet pack -c Release --include-source --no-build -o ..\..\artifacts
-    }
-    if($LASTEXITCODE -ne 0) { exit 1 }
-
-    Pop-Location
+if ($suffix) {
+    & dotnet pack -c Release -o ./artifacts --no-build --version-suffix=$suffix "$src/$projectName.csproj"
+} else {
+    & dotnet pack -c Release -o ./artifacts --no-build "$src/$projectName.csproj"
 }
-
-foreach ($test in ls test/*.Tests) {
-    Push-Location $test
-
-	echo "build: Testing project in $test"
-
-    & dotnet test -c Release
-    if($LASTEXITCODE -ne 0) { exit 3 }
-
-    Pop-Location
-}
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed" }
 
 Pop-Location

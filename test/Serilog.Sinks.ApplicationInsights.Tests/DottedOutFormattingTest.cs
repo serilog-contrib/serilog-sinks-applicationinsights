@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.Formatters;
-using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters;
+﻿using Serilog.Sinks.ApplicationInsights.Formatters;
+using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 using Xunit;
 
 namespace Serilog.Sinks.ApplicationInsights.Tests

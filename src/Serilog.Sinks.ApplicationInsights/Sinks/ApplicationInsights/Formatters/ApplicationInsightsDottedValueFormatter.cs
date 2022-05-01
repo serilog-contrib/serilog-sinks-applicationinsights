@@ -4,7 +4,7 @@ using System.Globalization;
 using Serilog.Debugging;
 using Serilog.Events;
 
-namespace Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.Formatters
+namespace Serilog.Sinks.ApplicationInsights.Formatters
 {
     public class ApplicationInsightsDottedValueFormatter : IValueFormatter
     {
