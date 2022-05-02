@@ -1,19 +1,14 @@
-# Serilog.Sinks.ApplicationInsights
+# Serilog.Sinks.ApplicationInsights [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
 
-A sink for Serilog that writes events to Microsoft Application Insights.
- 
-[![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
-
-This Sink comes with several defaults that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
+A sink for Serilog that writes events to Microsoft Application Insights. This sink comes with several defaults that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
 
 ## Configuring
 
-The simplest way to configure Serilog to send data to a ApplicationInsights dashboard via Instrumentation key is to use current active *telemetry configuration* which is already initialised in most application types like ASP.NET Core, Azure Functions etc.:
+The simplest way to configure Serilog to send data to a Application Insights dashboard via instrumentation key is to use current active *telemetry configuration* which is already initialised in most application types like ASP.NET Core, Azure Functions etc.:
 
 ```csharp
 var log = new LoggerConfiguration()
-    .WriteTo
-	.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Traces)
+    .WriteTo.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Traces)
     .CreateLogger();
 ```
 
@@ -23,8 +18,7 @@ var log = new LoggerConfiguration()
 
 ```csharp
 var log = new LoggerConfiguration()
-    .WriteTo
-	.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Events)
+    .WriteTo.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Events)
     .CreateLogger();
 ```
 
@@ -32,16 +26,17 @@ var log = new LoggerConfiguration()
 
 **Note:** Whether you choose `Events` or `Traces`, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
 
-### TelemetryConfiguration.Active is deprecated in the App Insights SDK for .NET Core, what do I do?
+### `TelemetryConfiguration.Active` is deprecated in the App Insights SDK for .NET Core, what do I do?
 
 The singleton [`TelemetryConfiguration.Active` has been deprecated in the Application Insights SDK on .NET Core in favor of dependency injection pattern](https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152).
 
 Therefore, now we need to pass in the `TelemetryConfiguration` instance that was added either by `services.AddApplicationInsightsTelemetryWorkerService()` (if you're developing a [non-http applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/worker-service)) or `services.AddApplicationInsightsTelemetry()` (if you're developing an [ASP.Net Core applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core)) during Startup in `ConfigureServices`.
 
 ```csharp
-var log = new LoggerConfiguration()
-    .WriteTo
-    .ApplicationInsights(serviceProvider.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces)
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.ApplicationInsights(
+        serviceProvider.GetRequiredService<TelemetryConfiguration>(),
+	TelemetryConverter.Traces)
     .CreateLogger();
 ```
 
@@ -76,15 +71,15 @@ public static class Program
 
     public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
-            .UseSerilog((context, services, loggerConfiguration) =>
-                loggerConfiguration
-                    .WriteTo
-                    .ApplicationInsights(services.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces))
+            .UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
+                .WriteTo.ApplicationInsights(
+		    services.GetRequiredService<TelemetryConfiguration>(),
+		    TelemetryConverter.Traces))
             .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
 }
 ```
 
-### Configuring with ReadFrom.Configuration()
+### Configuring with `ReadFrom.Configuration()`
 
 The following configuration shows how to create an ApplicationInsights sink with [ReadFrom.Configuration(configuration)](https://github.com/serilog/serilog-settings-configuration) - the telemetry converter has to be specified with the full type name and the assembly name: 
 
@@ -105,7 +100,8 @@ The following configuration shows how to create an ApplicationInsights sink with
         "Name": "ApplicationInsights",
         "Args": {
           "restrictedToMinimumLevel": "Information",
-          "telemetryConverter": "Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"
+          "telemetryConverter":
+	    "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"
         }
       }
     ],
@@ -153,7 +149,8 @@ var position = new { Latitude = 25, Longitude = 134 };
 var elapsedMs = 34;
 var numbers = new int[] { 1, 2, 3, 4 };
 
-Logger.Information("Processed {@Position} in {Elapsed:000} ms., str {str}, numbers: {numbers}", position, elapsedMs, "test", numbers);
+Logger.Information("Processed {@Position} in {Elapsed:000} ms., str {str}, numbers: {numbers}",
+    position, elapsedMs, "test", numbers);
 ```
 
 will produce the following properties in *customDimensions*:
@@ -185,15 +182,14 @@ private class DottedOutTraceTelemetryConverter : TraceTelemetryConverter
 }
 ```
 
-## Customising
+## Customizing
 
 Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all) by passing your own `ITelemetryConverter` instead of `TelemetryConverter.Traces` or `TelemetryConverter.Events` by either implementing your own `ITelemetryConverter` or deriving from `TraceTelemetryConverter` or `EventTelemetryConverter` and overriding specific bits.
 
 
 ```csharp
-var log = new LoggerConfiguration()
-    .WriteTo
-	.ApplicationInsights(configuration, new CustomConverter())
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.ApplicationInsights(configuration, new CustomConverter())
     .CreateLogger();
 // ...
 
@@ -248,7 +244,8 @@ The easiest way to customise included properties is to subclass one of the `ITel
 ```csharp
 private class IncludeRenderedMessageConverter : EventTelemetryConverter
 {
-    public override void ForwardPropertiesToTelemetryProperties(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
+    public override void ForwardPropertiesToTelemetryProperties(LogEvent logEvent, 
+        ISupportProperties telemetryProperties, IFormatProvider formatProvider)
     {
         base.ForwardPropertiesToTelemetryProperties(logEvent, telemetryProperties, formatProvider,
             includeLogLevel: false,
@@ -292,7 +289,7 @@ var log = new LoggerConfiguration()
 ```csharp
 _telemetryClient.Flush();
 
-// The AI Documentation mentions that calling .Flush() *can* be asynchronous and non-blocking so
+// The AI documentation mentions that calling `Flush()` *can* be asynchronous and non-blocking so
 // depending on the underlying Channel to AI you might want to wait some time
 // specific to your application and its connectivity constraints for the flush to finish.
 
@@ -304,9 +301,9 @@ System.Threading.Thread.Sleep(1000);
 
 ```
 
-## Including Operation ID
+## Including Operation Id
 
-Application Insight's Operation ID is pushed out if you set `operationId` LogEvent property. If it's present, AI's operation ID will be overriden by the value from this property.
+Application Insight's operation id is pushed out if you set `operationId` LogEvent property. If it's present, AI's operation id will be overriden by the value from this property.
 
 This can be set like so:
 
@@ -326,7 +323,7 @@ public class OperationIdEnricher : ILogEventEnricher
 
 ## Including Version
 
-Application Insight supports component version and is pushed out if you set `version` LogEvent property. If it's present, AI's operation version will include the value from this property.
+Application Insight supports component version and is pushed out if you set `version` log event property. If it's present, AI's operation version will include the value from this property.
 
 ## Using with Azure Functions
 
