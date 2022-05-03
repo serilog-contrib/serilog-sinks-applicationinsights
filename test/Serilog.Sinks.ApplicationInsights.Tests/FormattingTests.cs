@@ -68,5 +68,23 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
                 Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Component.Version);
             }
         }
+
+        [Fact]
+        public void Message_quotes_are_not_escaped()
+        {
+            var value = "This string is \"quoted\"";
+            Logger.Information("Data:\n{JsonData}", value);
+
+            Assert.Equal($"Data: \"{value}\"", LastSubmittedTraceTelemetry.Message);
+        }
+
+        [Fact]
+        public void Message_property_quotes_are_not_escaped()
+        {
+            var value = "This string is \"quoted\"";
+            Logger.Information("Data:\n{JsonData}", value);
+
+            Assert.Equal($"{value}", LastSubmittedTraceTelemetry.Properties["JsonData"]);
+        }
     }
 }
