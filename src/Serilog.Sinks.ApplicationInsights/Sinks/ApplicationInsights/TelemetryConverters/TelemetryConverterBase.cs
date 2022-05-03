@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
+using Serilog.Formatting.Display;
 using Serilog.Sinks.ApplicationInsights.Formatters;
 
 namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
@@ -13,6 +15,8 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
     /// </summary>
     public abstract class TelemetryConverterBase : ITelemetryConverter
     {
+        private static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new MessageTemplateTextFormatter("{Message:lj}");
+
         /// The <see cref="LogEvent.Level"/> is forwarded to the underlying AI Telemetry and its .Properties using this key.
         /// </summary>
         public const string TelemetryPropertiesLogLevel = "LogLevel";
@@ -108,7 +112,9 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
 
             if (includeRenderedMessage)
             {
-                telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, logEvent.RenderMessage(formatProvider));
+                var sw = new StringWriter();
+                MessageTemplateTextFormatter.Format(logEvent, sw);
+                telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, sw.ToString());
             }
 
             if (includeMessageTemplate)
