@@ -73,18 +73,18 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         public void Message_quotes_are_not_escaped()
         {
             var value = "This string is \"quoted\"";
-            Logger.Information("Data:\n{JsonData}", value);
+            Logger.Information("Data: {MyData}", value);
 
-            Assert.Equal($"Data: \"{value}\"", LastSubmittedTraceTelemetry.Message);
+            Assert.Equal($"Data: {value}", LastSubmittedTraceTelemetry.Message);
         }
 
         [Fact]
         public void Message_property_quotes_are_not_escaped()
         {
             var value = "This string is \"quoted\"";
-            Logger.Information("Data:\n{JsonData}", value);
+            Logger.Information("Data: {MyData}", value);
 
-            Assert.Equal($"{value}", LastSubmittedTraceTelemetry.Properties["JsonData"]);
+            Assert.Equal($"{value}", LastSubmittedTraceTelemetry.Properties["MyData"]);
         }
     }
 }
