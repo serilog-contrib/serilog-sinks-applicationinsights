@@ -33,5 +33,10 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
                 .OfType<TraceTelemetry>()
                 .LastOrDefault();
 
+        protected EventTelemetry LastSubmittedEventTelemetry =>
+            _channel.SubmittedTelemetry
+                .OfType<EventTelemetry>()
+                .LastOrDefault();
+
     }
 }
