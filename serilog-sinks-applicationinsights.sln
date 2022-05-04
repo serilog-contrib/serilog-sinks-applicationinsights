@@ -12,7 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{E9D1B5E1
 		README.md = README.md
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
-		CHANGES.md = CHANGES.md
 		LICENSE = LICENSE
 	EndProjectSection
 EndProject
