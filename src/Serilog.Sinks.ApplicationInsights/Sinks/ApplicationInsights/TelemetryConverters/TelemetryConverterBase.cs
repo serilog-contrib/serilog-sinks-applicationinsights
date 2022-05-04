@@ -115,7 +115,6 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
                 var sw = new StringWriter();
                 MessageTemplateTextFormatter.Format(logEvent, sw);
                 telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, sw.ToString());
-                // telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, logEvent.RenderMessage(formatProvider));
             }
 
             if (includeMessageTemplate)
