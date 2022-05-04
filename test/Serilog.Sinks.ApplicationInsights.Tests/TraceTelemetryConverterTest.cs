@@ -22,12 +22,5 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
             Logger.Information("Data: {MyData}", "This string is \"quoted\"");
             Assert.Equal("Data: This string is \"quoted\"", LastSubmittedTraceTelemetry.Message);
         }
-
-        [Fact]
-        public void MessagePropertyQuotesAreNotEscaped()
-        {
-            Logger.Information("Data: {MyData}", "This string is \"quoted\"");
-            Assert.Equal("This string is \"quoted\"", LastSubmittedTraceTelemetry.Properties["MyData"]);
-        }
     }
 }
