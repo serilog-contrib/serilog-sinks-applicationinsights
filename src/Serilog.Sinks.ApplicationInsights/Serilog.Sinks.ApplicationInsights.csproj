@@ -18,15 +18,17 @@
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>Serilog</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Serilog" Version="2.11.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.20.0" />
+    <PackageReference Include="Serilog" Version="2.11.0"/>
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.20.0"/>
   </ItemGroup>
 
   <ItemGroup>
-      <None Include="..\..\assets\icon.png" Pack="true" Visible="false" PackagePath="" />
+    <None Include="..\..\assets\icon.png" Pack="true" Visible="false" PackagePath=""/>
   </ItemGroup>
 
 </Project>

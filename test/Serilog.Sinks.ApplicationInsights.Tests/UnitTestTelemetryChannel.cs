@@ -1,39 +1,34 @@
-﻿using Microsoft.ApplicationInsights.Channel;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using Microsoft.ApplicationInsights.Channel;
 
-namespace Serilog.Sinks.ApplicationInsights.Tests
+namespace Serilog.Sinks.ApplicationInsights.Tests;
+
+class UnitTestTelemetryChannel : ITelemetryChannel
 {
-    class UnitTestTelemetryChannel : ITelemetryChannel
+    public List<ITelemetry> SubmittedTelemetry { get; } = new();
+
+    public bool? DeveloperMode
     {
-        public List<ITelemetry> SubmittedTelemetry { get; } = new List<ITelemetry>();
+        get => false;
+        set { }
+    }
 
-        public bool? DeveloperMode
-        {
-            get => false;
-            set { }
-        }
+    public string EndpointAddress
+    {
+        get => null;
+        set { }
+    }
 
-        public string EndpointAddress
-        {
-            get => null;
-            set { }
-        }
+    public void Dispose()
+    {
+    }
 
-        public void Dispose()
-        {
+    public void Flush()
+    {
+    }
 
-        }
-
-        public void Flush()
-        {
-
-        }
-
-        public void Send(ITelemetry item)
-        {
-            SubmittedTelemetry.Add(item);
-        }
+    public void Send(ITelemetry item)
+    {
+        SubmittedTelemetry.Add(item);
     }
 }
