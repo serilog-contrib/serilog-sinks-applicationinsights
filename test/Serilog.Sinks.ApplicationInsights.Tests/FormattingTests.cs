@@ -68,14 +68,5 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
                 Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Component.Version);
             }
         }
-
-        [Fact]
-        public void Message_property_quotes_are_not_escaped()
-        {
-            var value = "This string is \"quoted\"";
-            Logger.Information("Data: {MyData}", value);
-
-            Assert.Equal($"{value}", LastSubmittedTraceTelemetry.Properties["MyData"]);
-        }
     }
 }
