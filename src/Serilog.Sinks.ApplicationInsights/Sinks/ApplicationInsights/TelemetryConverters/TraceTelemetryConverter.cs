@@ -6,37 +6,37 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
 using Serilog.Formatting.Display;
 
-namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
+namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters;
+
+#pragma warning disable CS1591
+
+public class TraceTelemetryConverter : TelemetryConverterBase
 {
-    public class TraceTelemetryConverter : TelemetryConverterBase
+    static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:l}");
+
+    public override IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
     {
-        private static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new MessageTemplateTextFormatter("{Message:l}");
+        if (logEvent == null)
+            throw new ArgumentNullException(nameof(logEvent));
 
-        public override IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
+        if (logEvent.Exception == null)
         {
-            if (logEvent == null)
-                throw new ArgumentNullException(nameof(logEvent));
+            var sw = new StringWriter();
+            MessageTemplateTextFormatter.Format(logEvent, sw);
 
-            if (logEvent.Exception == null)
-            {
-                var sw = new StringWriter();
-                MessageTemplateTextFormatter.Format(logEvent, sw);
+            var telemetry = new TraceTelemetry(sw.ToString()) {
+                Timestamp = logEvent.Timestamp,
+                SeverityLevel = ToSeverityLevel(logEvent.Level)
+            };
 
-                var telemetry = new TraceTelemetry(sw.ToString())
-                {
-                    Timestamp = logEvent.Timestamp,
-                    SeverityLevel = ToSeverityLevel(logEvent.Level)
-                };
+            // write logEvent's .Properties to the AI one
+            ForwardPropertiesToTelemetryProperties(logEvent, telemetry, formatProvider);
 
-                // write logEvent's .Properties to the AI one
-                ForwardPropertiesToTelemetryProperties(logEvent, telemetry, formatProvider);
-
-                yield return telemetry;
-            }
-            else
-            {
-                yield return ToExceptionTelemetry(logEvent, formatProvider);
-            }
+            yield return telemetry;
+        }
+        else
+        {
+            yield return ToExceptionTelemetry(logEvent, formatProvider);
         }
     }
 }

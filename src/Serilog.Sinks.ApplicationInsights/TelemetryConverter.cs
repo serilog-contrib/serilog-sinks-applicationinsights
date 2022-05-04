@@ -14,12 +14,13 @@
 
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
-namespace Serilog
-{
-    public static class TelemetryConverter
-    {
-        public static ITelemetryConverter Traces => new TraceTelemetryConverter();
+namespace Serilog;
 
-        public static ITelemetryConverter Events => new EventTelemetryConverter();
-    }
+#pragma warning disable CS1591
+
+public static class TelemetryConverter
+{
+    public static ITelemetryConverter Traces => new TraceTelemetryConverter();
+
+    public static ITelemetryConverter Events => new EventTelemetryConverter();
 }

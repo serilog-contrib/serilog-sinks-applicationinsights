@@ -1,10 +1,13 @@
 # Serilog.Sinks.ApplicationInsights [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
 
-A sink for Serilog that writes events to Microsoft Application Insights. This sink comes with several defaults that send Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
+A sink for Serilog that writes events to Microsoft Application Insights. This sink comes with several defaults that send
+Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
 
 ## Configuring
 
-The simplest way to configure Serilog to send data to a Application Insights dashboard via instrumentation key is to use current active *telemetry configuration* which is already initialised in most application types like ASP.NET Core, Azure Functions etc.:
+The simplest way to configure Serilog to send data to a Application Insights dashboard via instrumentation key is to use
+current active *telemetry configuration* which is already initialised in most application types like ASP.NET Core, Azure
+Functions etc.:
 
 ```csharp
 var log = new LoggerConfiguration()
@@ -12,9 +15,7 @@ var log = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-
 .. or as `EventTelemetry`:
-
 
 ```csharp
 var log = new LoggerConfiguration()
@@ -22,15 +23,26 @@ var log = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-> You can also pass an *instrumentation key* and this sink will create a new `TelemetryConfiguration` based on it, however it's actively discouraged compared to using already initialised telemetry configuration, as your telemetry won't be properly correlated.
+> You can also pass an *instrumentation key* and this sink will create a new `TelemetryConfiguration` based on it,
+> however it's actively discouraged compared to using already initialised telemetry configuration, as your telemetry
+> won't
+> be properly correlated.
 
-**Note:** Whether you choose `Events` or `Traces`, if the LogEvent contains any exceptions it will always be sent as `ExceptionTelemetry`.
+**Note:** Whether you choose `Events` or `Traces`, if the LogEvent contains any exceptions it will always be sent
+as `ExceptionTelemetry`.
 
 ### `TelemetryConfiguration.Active` is deprecated in the App Insights SDK for .NET Core, what do I do?
 
-The singleton [`TelemetryConfiguration.Active` has been deprecated in the Application Insights SDK on .NET Core in favor of dependency injection pattern](https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152).
+The
+singleton [`TelemetryConfiguration.Active` has been deprecated in the Application Insights SDK on .NET Core in favor of dependency injection pattern](https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152)
+.
 
-Therefore, now we need to pass in the `TelemetryConfiguration` instance that was added either by `services.AddApplicationInsightsTelemetryWorkerService()` (if you're developing a [non-http applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/worker-service)) or `services.AddApplicationInsightsTelemetry()` (if you're developing an [ASP.Net Core applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core)) during Startup in `ConfigureServices`.
+Therefore, now we need to pass in the `TelemetryConfiguration` instance that was added either
+by `services.AddApplicationInsightsTelemetryWorkerService()` (if you're developing
+a [non-http applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/worker-service))
+or `services.AddApplicationInsightsTelemetry()` (if you're developing
+an [ASP.Net Core applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core)) during Startup
+in `ConfigureServices`.
 
 ```csharp
 Log.Logger = new LoggerConfiguration()
@@ -40,9 +52,12 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-However, you probably want to setup your Logger as close to the entry point of your application as possible, so that any startup errors can be caught and properly logged. The problem is that now we're in a chicken-and-egg situation: we want to setup the logger early, but we need the `TelemetryConfiguration` which still haven't been added to our DI container.
+However, you probably want to setup your Logger as close to the entry point of your application as possible, so that any
+startup errors can be caught and properly logged. The problem is that now we're in a chicken-and-egg situation: we want
+to setup the logger early, but we need the `TelemetryConfiguration` which still haven't been added to our DI container.
 
-Luckily [from version 4.0.x of the `Serilog.Extensions.Hosting` we have the possibility to configure a bootstrap logger](https://nblumhardt.com/2020/10/bootstrap-logger/) to capture early errors, and then change it using DI dependant services once they are configured.
+Luckily [from version 4.0.x of the `Serilog.Extensions.Hosting` we have the possibility to configure a bootstrap logger](https://nblumhardt.com/2020/10/bootstrap-logger/)
+to capture early errors, and then change it using DI dependant services once they are configured.
 
 ```csharp
 // dotnet add package serilog.extensions.hosting -v 4.0.0-*
@@ -81,7 +96,9 @@ public static class Program
 
 ### Configuring with `ReadFrom.Configuration()`
 
-The following configuration shows how to create an ApplicationInsights sink with [ReadFrom.Configuration(configuration)](https://github.com/serilog/serilog-settings-configuration) - the telemetry converter has to be specified with the full type name and the assembly name: 
+The following configuration shows how to create an ApplicationInsights sink
+with [ReadFrom.Configuration(configuration)](https://github.com/serilog/serilog-settings-configuration) - the telemetry
+converter has to be specified with the full type name and the assembly name:
 
 ```json
 {
@@ -120,6 +137,7 @@ The following configuration shows how to create an ApplicationInsights sink with
 ## What do we submit?
 
 By default, trace telemetry submits:
+
 - **rendered message** in trace's standard *message* property.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
@@ -127,18 +145,21 @@ By default, trace telemetry submits:
 - **custom log properties** as *customDimensions*.
 
 Event telemetry submits:
+
 - **message template** as *event name*.
 - **renderedMessage** in *customDimensions*.
 - **timestamp** in event's standard *timestamp* property.
 - **custom log properties** as *customDimensions*.
 
 Exception telemetry submits:
+
 - **exception** as standard AI exception.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
 - **custom log properties** as *customDimensions*.
 
-> Note that **log context** properties are also included in *customDimensions* when Serilog is configured with `.Enrich.FromLogContext()`.
+> Note that **log context** properties are also included in *customDimensions* when Serilog is configured
+> with `.Enrich.FromLogContext()`.
 
 ## How custom properties are logged?
 
@@ -184,8 +205,10 @@ private class DottedOutTraceTelemetryConverter : TraceTelemetryConverter
 
 ## Customizing
 
-Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send and also *what to send* (all or no LogEvent properties at all) by passing your own `ITelemetryConverter` instead of `TelemetryConverter.Traces` or `TelemetryConverter.Events` by either implementing your own `ITelemetryConverter` or deriving from `TraceTelemetryConverter` or `EventTelemetryConverter` and overriding specific bits.
-
+Additionally, you can also customize *whether* to send the LogEvents at all, if so *which type(s)* of Telemetry to send
+and also *what to send* (all or no LogEvent properties at all) by passing your own `ITelemetryConverter` instead
+of `TelemetryConverter.Traces` or `TelemetryConverter.Events` by either implementing your own `ITelemetryConverter` or
+deriving from `TraceTelemetryConverter` or `EventTelemetryConverter` and overriding specific bits.
 
 ```csharp
 Log.Logger = new LoggerConfiguration()
@@ -239,7 +262,8 @@ If you want to skip sending a particular LogEvent, just return `null` from your 
 
 ### Customising included properties
 
-The easiest way to customise included properties is to subclass one of the `ITelemetryConverter` implementations. For instance, let's include `renderedMessage` in event telemetry:
+The easiest way to customise included properties is to subclass one of the `ITelemetryConverter` implementations. For
+instance, let's include `renderedMessage` in event telemetry:
 
 ```csharp
 private class IncludeRenderedMessageConverter : EventTelemetryConverter
@@ -256,10 +280,14 @@ private class IncludeRenderedMessageConverter : EventTelemetryConverter
 ```
 
 ## How, When and Why to Flush Messages Manually
-		
+
 ### Or: Where did my Messages go?
 
-As explained by the [Application Insights documentation](https://azure.microsoft.com/en-us/documentation/articles/app-insights-api-custom-events-metrics/#flushing-data), the default behaviour of the AI client is to buffer messages and send them to AI in batches whenever the client seems fit. However, this may lead to lost messages when your application terminates while there are still unsent messages in said buffer.
+As explained by
+the [Application Insights documentation](https://azure.microsoft.com/en-us/documentation/articles/app-insights-api-custom-events-metrics/#flushing-data)
+, the default behaviour of the AI client is to buffer messages and send them to AI in batches whenever the client seems
+fit. However, this may lead to lost messages when your application terminates while there are still unsent messages in
+said buffer.
 
 You can control when AI shall flush its messages, for example when your application closes:
 
@@ -303,7 +331,8 @@ System.Threading.Thread.Sleep(1000);
 
 ## Including Operation Id
 
-Application Insight's operation id is pushed out if you set `operationId` LogEvent property. If it's present, AI's operation id will be overriden by the value from this property.
+Application Insight's operation id is pushed out if you set `operationId` LogEvent property. If it's present, AI's
+operation id will be overriden by the value from this property.
 
 This can be set like so:
 
@@ -323,13 +352,19 @@ public class OperationIdEnricher : ILogEventEnricher
 
 ## Including Version
 
-Application Insight supports component version and is pushed out if you set `version` log event property. If it's present, AI's operation version will include the value from this property.
+Application Insight supports component version and is pushed out if you set `version` log event property. If it's
+present, AI's operation version will include the value from this property.
 
 ## Using with Azure Functions
 
-Azure functions has out of the box integration with Application Insights, which automatically logs functions execution start, end, and any exception. Please refer to the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to enable it.
+Azure functions has out of the box integration with Application Insights, which automatically logs functions execution
+start, end, and any exception. Please refer to
+the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to
+enable it.
 
-This sink can enrich AI messages, preserving *operation_Id* and other context information which is *already provided by functions runtime*. The easiest way to configure Serilog in this case is to use **TelemetryConfiguration.Active** which is already properly configured. You can, for instance, initialise logging in the static constructor:
+This sink can enrich AI messages, preserving *operation_Id* and other context information which is *already provided by
+functions runtime*. The easiest way to configure Serilog in this case is to use **TelemetryConfiguration.Active** which
+is already properly configured. You can, for instance, initialise logging in the static constructor:
 
 ```csharp
 public static class MyFunctions
@@ -348,6 +383,7 @@ public static class MyFunctions
 }
 ```
 
-Copyright &copy; 2021 Serilog Contributors - Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
+Copyright &copy; 2021 Serilog Contributors - Provided under
+the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
 See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)
