@@ -21,9 +21,8 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
             {
                 var sw = new StringWriter();
                 MessageTemplateTextFormatter.Format(logEvent, sw);
-                var renderedMessage = sw.ToString();
 
-                var telemetry = new TraceTelemetry(renderedMessage)
+                var telemetry = new TraceTelemetry(sw.ToString())
                 {
                     Timestamp = logEvent.Timestamp,
                     SeverityLevel = ToSeverityLevel(logEvent.Level)
