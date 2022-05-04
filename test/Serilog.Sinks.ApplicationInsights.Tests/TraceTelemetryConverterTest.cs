@@ -17,6 +17,13 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         }
 
         [Fact]
+        public void MessagesAreFormattedWithoutQuotedStringsWhenDestructuring()
+        {
+            Logger.Information("Hello, {@Name}", new { Foo = "foo", Bar = 123 });
+            Assert.Equal("Hello, { Foo: \"foo\", Bar: 123 }", LastSubmittedTraceTelemetry.Message);
+        }
+
+        [Fact]
         public void MessageQuotesAreNotEscaped()
         {
             Logger.Information("Data: {MyData}", "This string is \"quoted\"");
