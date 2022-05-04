@@ -19,19 +19,15 @@ namespace Serilog.Sinks.ApplicationInsights.Tests
         [Fact]
         public void MessageQuotesAreNotEscaped()
         {
-            var value = "This string is \"quoted\"";
-            Logger.Information("Data: {MyData}", value);
-
-            Assert.Equal($"Data: {value}", LastSubmittedTraceTelemetry.Message);
+            Logger.Information("Data: {MyData}", "This string is \"quoted\"");
+            Assert.Equal("Data: This string is \"quoted\"", LastSubmittedTraceTelemetry.Message);
         }
 
         [Fact]
         public void MessagePropertyQuotesAreNotEscaped()
         {
-            var value = "This string is \"quoted\"";
-            Logger.Information("Data: {MyData}", value);
-
-            Assert.Equal($"{value}", LastSubmittedTraceTelemetry.Properties["MyData"]);
+            Logger.Information("Data: {MyData}", "This string is \"quoted\"");
+            Assert.Equal("This string is \"quoted\"", LastSubmittedTraceTelemetry.Properties["MyData"]);
         }
     }
 }
