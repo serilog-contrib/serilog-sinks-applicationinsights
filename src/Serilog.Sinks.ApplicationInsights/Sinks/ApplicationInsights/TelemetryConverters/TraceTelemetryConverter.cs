@@ -10,7 +10,7 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
 {
     public class TraceTelemetryConverter : TelemetryConverterBase
     {
-        private static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new MessageTemplateTextFormatter("{Message:lj}");
+        private static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new MessageTemplateTextFormatter("{Message:l}");
 
         public override IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
         {
@@ -23,6 +23,7 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
                 MessageTemplateTextFormatter.Format(logEvent, sw);
 
                 var telemetry = new TraceTelemetry(sw.ToString())
+                // var telemetry = new TraceTelemetry(logEvent.RenderMessage(formatProvider))
                 {
                     Timestamp = logEvent.Timestamp,
                     SeverityLevel = ToSeverityLevel(logEvent.Level)

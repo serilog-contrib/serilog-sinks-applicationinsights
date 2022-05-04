@@ -15,7 +15,7 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
     /// </summary>
     public abstract class TelemetryConverterBase : ITelemetryConverter
     {
-        private static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new MessageTemplateTextFormatter("{Message:lj}");
+        private static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new MessageTemplateTextFormatter("{Message:l}");
 
         /// The <see cref="LogEvent.Level"/> is forwarded to the underlying AI Telemetry and its .Properties using this key.
         /// </summary>
@@ -115,6 +115,7 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters
                 var sw = new StringWriter();
                 MessageTemplateTextFormatter.Format(logEvent, sw);
                 telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, sw.ToString());
+                // telemetryProperties.Properties.Add(TelemetryPropertiesRenderedMessage, logEvent.RenderMessage(formatProvider));
             }
 
             if (includeMessageTemplate)
