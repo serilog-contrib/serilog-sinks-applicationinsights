@@ -29,4 +29,11 @@ public class EventTelemetryConverterTest : ApplicationInsightsTest
         Logger.Information("Data: {MyData}", "This string is \"quoted\"");
         Assert.Equal("Data: This string is \"quoted\"", LastSubmittedEventTelemetry.Properties["RenderedMessage"]);
     }
+
+    [Fact]
+    public void DestructuredPropertyIsFormattedCorrectly()
+    {
+        Logger.Information("Hello, {@MyData}", new { Foo = "foo", Bar = 123 });
+        Assert.Equal("{\"Foo\":\"foo\",\"Bar\":123}", LastSubmittedEventTelemetry.Properties["MyData"]);
+    }
 }
