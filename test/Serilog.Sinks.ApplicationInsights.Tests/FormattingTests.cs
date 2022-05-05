@@ -69,4 +69,12 @@ public class FormattingTests : ApplicationInsightsTest
             Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Component.Version);
         }
     }
+
+    [Fact]
+    public void Literal_string_properties_are_not_encoded()
+    {
+        const string literal = "\"some \\ \"literal string \"";
+        Logger.Information("Literal is {Literal}", literal);
+        Assert.Equal(literal, LastSubmittedTraceTelemetry.Properties["Literal"]);
+    }
 }

@@ -6,32 +6,39 @@ using Serilog.Formatting.Json;
 
 namespace Serilog.Sinks.ApplicationInsights.Formatters;
 
-#pragma warning disable CS1591
-
+/// <summary>
+/// Formats properties containing structured data as JSON.
+/// </summary>
 public class ApplicationInsightsJsonValueFormatter : IValueFormatter
 {
-    static readonly char[] TrimChars = { '\"' };
-    readonly JsonValueFormatter _formatter = new();
+    readonly JsonValueFormatter _formatter = new("$type");
 
-    public void Format(string propertyName, LogEventPropertyValue propertyValue,
+    /// <inheritdoc />
+    public void Format(
+        string propertyName,
+        LogEventPropertyValue propertyValue,
         IDictionary<string, string> properties)
     {
-        string value;
-        using (var sw = new StringWriter())
-        {
-            _formatter.Format(propertyValue, sw);
-            value = sw.ToString();
-        }
+        string formattedValue;
 
-        value = value.Trim(TrimChars);
+        if (propertyValue is ScalarValue { Value: string literal })
+        {
+            formattedValue = literal;
+        }
+        else
+        {
+            using var sw = new StringWriter();
+            _formatter.Format(propertyValue, sw);
+            formattedValue = sw.ToString();
+        }
 
         if (properties.ContainsKey(propertyName))
         {
             SelfLog.WriteLine("The key {0} is not unique after simplification. Ignoring new value {1}",
-                propertyName, value);
+                propertyName, formattedValue);
             return;
         }
 
-        properties.Add(propertyName, value);
+        properties.Add(propertyName, formattedValue);
     }
 }

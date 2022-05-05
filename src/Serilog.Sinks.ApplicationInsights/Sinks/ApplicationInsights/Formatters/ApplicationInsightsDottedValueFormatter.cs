@@ -59,10 +59,9 @@ public class ApplicationInsightsDottedValueFormatter : IValueFormatter
         AppendProperty(properties, key + ".Count", index.ToString());
     }
 
-    public static void WriteValue(string key, object value, IDictionary<string, string> properties)
+    static void WriteValue(string key, object value, IDictionary<string, string> properties)
     {
-        Action<string, object, IDictionary<string, string>> writer;
-        if (value == null || !LiteralWriters.TryGetValue(value.GetType(), out writer))
+        if (value == null || !LiteralWriters.TryGetValue(value.GetType(), out var writer))
         {
             AppendProperty(properties, key, value?.ToString());
             return;
