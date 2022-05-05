@@ -1,3 +1,5 @@
+using System;
+using System.Runtime.InteropServices;
 using Serilog.Context;
 using Xunit;
 
@@ -68,5 +70,19 @@ public class FormattingTests : ApplicationInsightsTest
 
             Assert.Equal("myId1", LastSubmittedTraceTelemetry.Context.Component.Version);
         }
+    }
+
+    [Theory]
+    [InlineData("\"some \\ \"literal string \"", "\"some \\ \"literal string \"")]
+    [InlineData(true, "true")]
+    [InlineData(false, "false")]
+    [InlineData(null, "null")]
+    [InlineData(123.45, "123.45")]
+    [InlineData(6789, "6789")]
+    [InlineData('a', "a")]
+    public void Scalar_values_are_encoded_as_expected(object scalar, string expected)
+    {
+        Logger.Information("Value is {Scalar}", scalar);
+        Assert.Equal(expected, LastSubmittedTraceTelemetry.Properties["Scalar"]);
     }
 }
