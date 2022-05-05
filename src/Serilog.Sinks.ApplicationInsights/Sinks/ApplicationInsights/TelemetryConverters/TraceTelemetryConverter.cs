@@ -12,7 +12,7 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 public class TraceTelemetryConverter : TelemetryConverterBase
 {
-    static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:lj}");
+    static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:l}");
 
     public override IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
     {

@@ -43,7 +43,7 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
     /// </summary>
     public const string VersionProperty = "version";
 
-    static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:lj}");
+    static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:l}");
 
     /// <summary>
     ///     Creates an instance of <see cref="TelemetryConverterBase" /> using default value formatter (
