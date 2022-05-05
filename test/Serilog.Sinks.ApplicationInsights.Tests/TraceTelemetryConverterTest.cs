@@ -20,7 +20,7 @@ public class TraceTelemetryConverterTest : ApplicationInsightsTest
     public void MessagesAreFormattedWithoutQuotedStringsWhenDestructuring()
     {
         Logger.Information("Hello, {@Name}", new { Foo = "foo", Bar = 123 });
-        Assert.Equal("Hello, {\"Foo\":\"foo\",\"Bar\":123}", LastSubmittedTraceTelemetry.Message);
+        Assert.Equal("Hello, { \"Foo\": \"foo\", \"Bar\": 123 }", LastSubmittedTraceTelemetry.Message);
     }
 
     [Fact]
