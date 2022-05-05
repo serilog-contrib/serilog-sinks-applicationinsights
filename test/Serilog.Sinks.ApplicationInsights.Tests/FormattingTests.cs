@@ -1,3 +1,5 @@
+using System;
+using System.Runtime.InteropServices;
 using Serilog.Context;
 using Xunit;
 
@@ -70,11 +72,17 @@ public class FormattingTests : ApplicationInsightsTest
         }
     }
 
-    [Fact]
-    public void Literal_string_properties_are_not_encoded()
+    [Theory]
+    [InlineData("\"some \\ \"literal string \"", "\"some \\ \"literal string \"")]
+    [InlineData(true, "true")]
+    [InlineData(false, "false")]
+    [InlineData(null, "null")]
+    [InlineData(123.45, "123.45")]
+    [InlineData(6789, "6789")]
+    [InlineData('a', "a")]
+    public void Scalar_values_are_encoded_as_expected(object scalar, string expected)
     {
-        const string literal = "\"some \\ \"literal string \"";
-        Logger.Information("Literal is {Literal}", literal);
-        Assert.Equal(literal, LastSubmittedTraceTelemetry.Properties["Literal"]);
+        Logger.Information("Value is {Scalar}", scalar);
+        Assert.Equal(expected, LastSubmittedTraceTelemetry.Properties["Scalar"]);
     }
 }
