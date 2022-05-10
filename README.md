@@ -357,33 +357,38 @@ present, AI's operation version will include the value from this property.
 
 ## Using with Azure Functions
 
-Azure functions has out of the box integration with Application Insights, which automatically logs functions execution
+Azure functions has out of the box integration with Application Insights through ILogger, which automatically logs functions execution
 start, end, and any exception. Please refer to
 the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to
 enable it.
 
 This sink can enrich AI messages, preserving *operation_Id* and other context information which is *already provided by
-functions runtime*. The easiest way to configure Serilog in this case is to use **TelemetryConfiguration.Active** which
-is already properly configured. You can, for instance, initialise logging in the static constructor:
+functions runtime*. The easiest way to configure Serilog in this case is to register an instance of ILoggerProvider in the Startup.cs:
 
 ```csharp
-public static class MyFunctions
+[assembly: FunctionsStartup(typeof(MyFunctions.Startup))]
+namespace MyFunctions
 {
-        static MyFunctions()
+    public class Startup : FunctionsStartup
+    {
+        public override void Configure(IFunctionsHostBuilder builder)
         {
-            var config = TelemetryConfiguration.Active;
-            if (config != null)
+            builder.Services.AddSingleton<ILoggerProvider>((sp) => 
             {
-                Log.Logger = new LoggerConfiguration()
+                var loggerConfiguration = new LoggerConfiguration()
                     .Enrich.FromLogContext()
-                    .WriteTo.ApplicationInsights(config, TelemetryConverter.Traces)
+                    .WriteTo.ApplicationInsights(sp.GetRequiredService<TelemetryClient>(), TelemetryConverter.Traces)
                     .CreateLogger();
-            }
+
+                return new SerilogLoggerProvider(loggerConfiguration, true);
+            });
         }
+    }
 }
+
 ```
 
-Copyright &copy; 2021 Serilog Contributors - Provided under
+Copyright &copy; 2022 Serilog Contributors - Provided under
 the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
 See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)
