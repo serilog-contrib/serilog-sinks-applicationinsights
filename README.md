@@ -363,23 +363,28 @@ the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functio
 enable it.
 
 This sink can enrich AI messages, preserving *operation_Id* and other context information which is *already provided by
-functions runtime*. The easiest way to configure Serilog in this case is to use **TelemetryConfiguration.Active** which
-is already properly configured. You can, for instance, initialise logging in the static constructor:
+functions runtime*. The easiest way to configure Serilog in this case is to use the injected **TelemetryClient** which
+should be automatically configured by the environment through the **APPLICATIONINSIGHTS_CONNECTION_STRING** appsetting.
+You can, for instance, initialise logging in the static constructor:
 
 ```csharp
-public static class MyFunctions
+[assembly: FunctionsStartup(typeof(MyFunctions.Startup))]
+namespace MyFunctions
 {
-        static MyFunctions()
+    public class Startup : FunctionsStartup
+    {
+        public override void Configure(IFunctionsHostBuilder builder)
         {
-            var config = TelemetryConfiguration.Active;
-            if (config != null)
+            builder.Services.AddSingleton<ILoggerProvider>((sp) => 
             {
                 Log.Logger = new LoggerConfiguration()
                     .Enrich.FromLogContext()
-                    .WriteTo.ApplicationInsights(config, TelemetryConverter.Traces)
+                    .WriteTo.ApplicationInsights(sp.GetRequiredService<TelemetryClient>(), TelemetryConverter.Traces)
                     .CreateLogger();
-            }
+                return new SerilogLoggerProvider(Log.Logger, true);
+            });
         }
+    }
 }
 ```
 
