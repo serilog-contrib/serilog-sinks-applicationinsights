@@ -388,7 +388,7 @@ namespace MyFunctions
 }
 ```
 
-Copyright &copy; 2021 Serilog Contributors - Provided under
+Copyright &copy; 2022 Serilog Contributors - Provided under
 the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
 See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)
