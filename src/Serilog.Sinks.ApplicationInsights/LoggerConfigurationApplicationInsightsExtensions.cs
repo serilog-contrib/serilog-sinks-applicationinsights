@@ -101,8 +101,7 @@ public static class LoggerConfigurationApplicationInsightsExtensions
     /// <summary>
     ///     Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights
     ///     using a custom <see cref="ITelemetry" /> converter / constructor. Only use in rare cases when your application
-    ///     doesn't
-    ///     have already constructed AI telemetry configuration, which is extremely rare.
+    ///     doesn't have an already-constructed AI telemetry configuration, which is extremely rare.
     /// </summary>
     /// <param name="loggerConfiguration">The logger configuration.</param>
     /// <param name="connectionString">Required Application Insights connection string.</param>
@@ -118,10 +117,13 @@ public static class LoggerConfigurationApplicationInsightsExtensions
         LoggingLevelSwitch levelSwitch = null)
     {
         var config = TelemetryConfiguration.CreateDefault();
-        if (!string.IsNullOrWhiteSpace(connectionString)) config.ConnectionString = connectionString;
-#pragma warning disable CS0618
+
+        if (!string.IsNullOrWhiteSpace(connectionString))
+        {
+            config.ConnectionString = connectionString;
+        }
+
         var client = new TelemetryClient(config);
-#pragma warning restore CS0618
 
         return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter),
             restrictedToMinimumLevel, levelSwitch);

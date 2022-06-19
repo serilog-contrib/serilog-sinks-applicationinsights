@@ -96,9 +96,10 @@ public static class Program
 
 ### Configuring with `ReadFrom.Configuration()`
 
+Configuring in code, as shown above, is recommended because the existing `TelemetryClient` can be injected.
+
 The following configuration shows how to create an ApplicationInsights sink
-with [ReadFrom.Configuration(configuration)](https://github.com/serilog/serilog-settings-configuration) - the telemetry
-converter has to be specified with the full type name and the assembly name:
+with [ReadFrom.Configuration(configuration)](https://github.com/serilog/serilog-settings-configuration).
 
 ```json
 {
@@ -107,16 +108,17 @@ converter has to be specified with the full type name and the assembly name:
       "Serilog.Sinks.ApplicationInsights"
     ],
     "MinimumLevel": {
-      "Default": "Debug",
+      "Default": "Information",
       "Override": {
-        "Microsoft": "Information"
+        "Microsoft": "Warning",
+        "System": "Warning"
       }
     },
     "WriteTo": [
       {
         "Name": "ApplicationInsights",
         "Args": {
-          "restrictedToMinimumLevel": "Information",
+          "connectionString": "[your connection string here]",
           "telemetryConverter":
 	    "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"
         }
@@ -130,11 +132,11 @@ converter has to be specified with the full type name and the assembly name:
 }
 ```
 
-> As mentioned above you can also pass an *instrumentation key* but it's actively discouraged
+The `telemetryConverter` has to be specified with the full type name and the assembly name.
 
-**Note**: restrictedToMinimumLevel can be omitted since it is defaulted to LevelAlias.Minimum.
+A `connectionString` can be omitted if it's [supplied in the `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable](https://docs.microsoft.com/en-us/azure/azure-monitor/app/migrate-from-instrumentation-keys-to-connection-strings).
 
-## What do we submit?
+## What does the sink submit?
 
 By default, trace telemetry submits:
 
