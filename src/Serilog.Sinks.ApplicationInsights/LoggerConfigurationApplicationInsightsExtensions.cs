@@ -105,23 +105,23 @@ public static class LoggerConfigurationApplicationInsightsExtensions
     ///     have already constructed AI telemetry configuration, which is extremely rare.
     /// </summary>
     /// <param name="loggerConfiguration">The logger configuration.</param>
-    /// <param name="instrumentationKey">Required Application Insights key.</param>
+    /// <param name="connectionString">Required Application Insights connection string.</param>
     /// <param name="telemetryConverter">Required telemetry converter.</param>
     /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
     /// <param name="levelSwitch">Logging level switch for this sink</param>
     /// <returns></returns>
     public static LoggerConfiguration ApplicationInsights(
         this LoggerSinkConfiguration loggerConfiguration,
-        string instrumentationKey,
+        string connectionString,
         ITelemetryConverter telemetryConverter,
         LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
         LoggingLevelSwitch levelSwitch = null)
     {
+        var config = TelemetryConfiguration.CreateDefault();
+        if (!string.IsNullOrWhiteSpace(connectionString)) config.ConnectionString = connectionString;
 #pragma warning disable CS0618
-        var client = new TelemetryClient();
+        var client = new TelemetryClient(config);
 #pragma warning restore CS0618
-
-        if (!string.IsNullOrWhiteSpace(instrumentationKey)) client.InstrumentationKey = instrumentationKey;
 
         return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter),
             restrictedToMinimumLevel, levelSwitch);
