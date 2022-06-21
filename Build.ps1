@@ -23,15 +23,12 @@ echo "build: Version suffix is $suffix"
 & dotnet test -c Release "./test/$projectName.Tests/$projectName.Tests.csproj"
 if ($LASTEXITCODE -ne 0) { throw "dotnet test failed" }
 
-$src = "./src/$projectName"
-
-& dotnet build -c Release --version-suffix=$suffix "$src/$projectName.csproj"
-if ($LASTEXITCODE -ne 0) { throw "dotnet build failed" }
+$csproj = "./src/$projectName/$projectName.csproj"
 
 if ($suffix) {
-    & dotnet pack -c Release -o ./artifacts --no-build --version-suffix=$suffix "$src/$projectName.csproj"
+    & dotnet pack "$csproj" -c Release -o ./artifacts --version-suffix=$suffix
 } else {
-    & dotnet pack -c Release -o ./artifacts --no-build "$src/$projectName.csproj"
+    & dotnet pack "$csproj" -c Release -o ./artifacts
 }
 if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed" }
 
