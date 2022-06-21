@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Serilog.Sinks.ApplicationInsights.Sinks.ApplicationInsights.TelemetryConverters;
+using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
-namespace Serilog
+namespace Serilog;
+
+#pragma warning disable CS1591
+
+public static class TelemetryConverter
 {
-    public static class TelemetryConverter
-    {
-        public static ITelemetryConverter Traces => new TraceTelemetryConverter();
+    public static ITelemetryConverter Traces => new TraceTelemetryConverter();
 
-        public static ITelemetryConverter Events => new EventTelemetryConverter();
-    }
+    public static ITelemetryConverter Events => new EventTelemetryConverter();
 }
