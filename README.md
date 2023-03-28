@@ -10,16 +10,20 @@ current active *telemetry configuration* which is already initialised in most ap
 Functions etc.:
 
 ```csharp
+// TelemetryConfiguration.Active is obsolete
+// https://github.com/microsoft/ApplicationInsights-dotnet/pull/1148
 var log = new LoggerConfiguration()
-    .WriteTo.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Traces)
+    .WriteTo.ApplicationInsights(TelemetryConfiguration.CreateDefault(), TelemetryConverter.Traces)
     .CreateLogger();
 ```
 
 .. or as `EventTelemetry`:
 
 ```csharp
+// TelemetryConfiguration.Active is obsolete
+// https://github.com/microsoft/ApplicationInsights-dotnet/pull/1148
 var log = new LoggerConfiguration()
-    .WriteTo.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Events)
+    .WriteTo.ApplicationInsights(TelemetryConfiguration.CreateDefault(), TelemetryConverter.Events)
     .CreateLogger();
 ```
 
