@@ -23,6 +23,7 @@ public abstract class ApplicationInsightsTest
     }
 
     protected ILogger Logger { get; }
+    protected UnitTestTelemetryChannel Channel => _channel;
 
     protected List<ITelemetry> SubmittedTelemetry => _channel.SubmittedTelemetry;
 
