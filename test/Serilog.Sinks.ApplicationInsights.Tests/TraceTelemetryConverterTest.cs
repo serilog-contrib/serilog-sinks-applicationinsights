@@ -40,6 +40,14 @@ public class TraceTelemetryConverterTest : ApplicationInsightsTest
     }
 
     [Fact]
+    public void TraceIdAndSpanIdDefaultByDefault()
+    {
+        Logger.Information("Hello, {Name}!", "world");
+        Assert.Null(LastSubmittedTraceTelemetry.Context.Operation.Id);
+        Assert.Null(LastSubmittedTraceTelemetry.Context.Operation.ParentId);
+    }
+
+    [Fact]
     public void TraceIdAndSpanIdAreSet()
     {
         using Activity activity = new("TestActivity");
