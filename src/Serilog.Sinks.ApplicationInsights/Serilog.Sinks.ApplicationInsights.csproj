@@ -14,6 +14,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageProjectUrl>https://github.com/serilog-contrib/serilog-sinks-applicationinsights</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/serilog-contrib/serilog-sinks-applicationinsights</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -29,6 +30,7 @@
 
   <ItemGroup>
     <None Include="..\..\assets\icon.png" Pack="true" Visible="false" PackagePath=""/>
+    <None Include="..\..\README.md" Pack="true" Visible="false" PackagePath="/" />
   </ItemGroup>
 
 </Project>
