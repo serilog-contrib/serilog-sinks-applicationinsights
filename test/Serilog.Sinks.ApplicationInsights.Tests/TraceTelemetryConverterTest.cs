@@ -1,4 +1,6 @@
-﻿using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
+﻿using System;
+using System.Diagnostics;
+using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 using Xunit;
 
 namespace Serilog.Sinks.ApplicationInsights.Tests;
@@ -35,5 +37,34 @@ public class TraceTelemetryConverterTest : ApplicationInsightsTest
     {
         Logger.Information("Hello, {@MyData}", new { Foo = "foo", Bar = 123 });
         Assert.Equal("{\"Foo\":\"foo\",\"Bar\":123}", LastSubmittedTraceTelemetry.Properties["MyData"]);
+    }
+
+    [Fact]
+    public void TraceIdAndSpanIdDefaultByDefault()
+    {
+        Logger.Information("Hello, {Name}!", "world");
+        Assert.Null(LastSubmittedTraceTelemetry.Context.Operation.Id);
+        Assert.Null(LastSubmittedTraceTelemetry.Context.Operation.ParentId);
+    }
+
+    [Fact]
+    public void TraceIdAndSpanIdAreSet()
+    {
+        using Activity activity = new("TestActivity");
+        activity.Start();
+        Logger.Information("Hello, {Name}!", "world");
+        Assert.Equal(activity.TraceId.ToHexString(), LastSubmittedTraceTelemetry.Context.Operation.Id);
+        Assert.Equal(activity.SpanId.ToHexString(), LastSubmittedTraceTelemetry.Context.Operation.ParentId);
+    }
+
+    [Fact]
+    public void OperationIdTakesPrecedenceOverTraceId()
+    {
+        using Activity activity = new("TestActivity");
+        activity.Start();
+        string operationId = Guid.NewGuid().ToString("N");
+        Logger.Information("Hello, {operationId}!", operationId);
+        Assert.Equal(operationId, LastSubmittedTraceTelemetry.Context.Operation.Id);
+        Assert.Null(LastSubmittedTraceTelemetry.Context.Operation.ParentId);
     }
 }

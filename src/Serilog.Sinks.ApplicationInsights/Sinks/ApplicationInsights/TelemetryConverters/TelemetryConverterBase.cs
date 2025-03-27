@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.ApplicationInsights.Channel;
@@ -144,6 +145,14 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
         {
             if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationId))
                 telemetry.Context.Operation.Id = operationId.ToString().Trim('\"');
+            else
+            {
+                if (logEvent.TraceId is ActivityTraceId traceId)
+                    telemetry.Context.Operation.Id = traceId.ToHexString();
+
+                if (logEvent.SpanId is ActivitySpanId spanId)
+                    telemetry.Context.Operation.ParentId = spanId.ToHexString();
+            }
 
             if (logEvent.Properties.TryGetValue(VersionProperty, out var version)
                 && telemetry.Context?.Component != null)
