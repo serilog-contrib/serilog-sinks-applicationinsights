@@ -1,35 +1,79 @@
-echo "build: Build started"
+Write-Output "build: Tool versions follow"
+
+dotnet --version
+dotnet --list-sdks
+
+Write-Output "build: Build started"
 
 Push-Location $PSScriptRoot
+try {
+    if(Test-Path .\artifacts) {
+        Write-Output "build: Cleaning ./artifacts"
+        Remove-Item ./artifacts -Force -Recurse
+    }
 
-if (Test-Path ./artifacts) {
-	echo "build: Cleaning ./artifacts"
-	Remove-Item ./artifacts -Force -Recurse
+    & dotnet restore --no-cache
+
+    $dbp = [Xml] (Get-Content .\Directory.Version.props)
+    $versionPrefix = $dbp.Project.PropertyGroup.VersionPrefix
+
+    Write-Output "build: Package version prefix is $versionPrefix"
+
+    $branch = @{ $true = $env:CI_TARGET_BRANCH; $false = $(git symbolic-ref --short -q HEAD) }[$NULL -ne $env:CI_TARGET_BRANCH];
+    $revision = @{ $true = "{0:00000}" -f [convert]::ToInt32("0" + $env:CI_BUILD_NUMBER, 10); $false = "local" }[$NULL -ne $env:CI_BUILD_NUMBER];
+    $suffix = @{ $true = ""; $false = "$($branch.Substring(0, [math]::Min(10,$branch.Length)) -replace '([^a-zA-Z0-9\-]*)', '')-$revision"}[$branch -eq "main" -and $revision -ne "local"]
+    $commitHash = $(git rev-parse --short HEAD)
+    $buildSuffix = @{ $true = "$($suffix)-$($commitHash)"; $false = "$($branch)-$($commitHash)" }[$suffix -ne ""]
+
+    Write-Output "build: Package version suffix is $suffix"
+    Write-Output "build: Build version suffix is $buildSuffix"
+
+    & dotnet build -c Release --version-suffix=$buildSuffix /p:ContinuousIntegrationBuild=true
+    if($LASTEXITCODE -ne 0) { throw "Build failed" }
+
+    foreach ($src in Get-ChildItem src/*) {
+        Push-Location $src
+
+        Write-Output "build: Packaging project in $src"
+
+        if ($suffix) {
+            & dotnet pack -c Release --no-build --no-restore  -o ../../artifacts --version-suffix=$suffix
+        } else {
+            & dotnet pack -c Release --no-build --no-restore  -o ../../artifacts
+        }
+        if($LASTEXITCODE -ne 0) { throw "Packaging failed" }
+
+        Pop-Location
+    }
+
+    foreach ($test in Get-ChildItem test/*.Tests) {
+        Push-Location $test
+
+        Write-Output "build: Testing project in $test"
+
+        & dotnet test -c Release --no-build --no-restore
+        if($LASTEXITCODE -ne 0) { throw "Testing failed" }
+
+        Pop-Location
+    }
+
+    if ($env:NUGET_API_KEY) {
+        # GitHub Actions will only supply this to branch builds and not PRs. We publish
+        # builds from any branch this action targets (i.e. main and dev).
+
+        Write-Output "build: Publishing NuGet packages"
+
+        foreach ($nupkg in Get-ChildItem artifacts/*.nupkg) {
+            & dotnet nuget push -k $env:NUGET_API_KEY -s https://api.nuget.org/v3/index.json "$nupkg"
+            if($LASTEXITCODE -ne 0) { throw "Publishing failed" }
+        }
+
+        if (!($suffix)) {
+            Write-Output "build: Creating release for version $versionPrefix"
+
+            iex "gh release create v$versionPrefix --title v$versionPrefix --generate-notes $(get-item ./artifacts/*.nupkg) $(get-item ./artifacts/*.snupkg)"
+        }
+    }
+} finally {
+    Pop-Location
 }
-
-echo "build: Restoring"
-& dotnet restore --no-cache
-if($LASTEXITCODE -ne 0) { exit 1 }
-
-$projectName = "Serilog.Sinks.ApplicationInsights"
-$ref = $env:GITHUB_REF ?? ""
-$run = $env:GITHUB_RUN_NUMBER ?? "0"
-$branch = @{ $true = $ref.Substring($ref.LastIndexOf("/") + 1); $false = $(git symbolic-ref --short -q HEAD) }[$ref -ne ""];
-$revision = @{ $true = "{0:00000}" -f [convert]::ToInt32("0" + $run, 10); $false = "local" }[$run -ne "0"];
-$suffix = @{ $true = ""; $false = "$($branch.Substring(0, [math]::Min(10,$branch.Length)))-$revision"}[$branch -eq "main" -and $revision -ne "local"]
-
-echo "build: Version suffix is $suffix"
-
-& dotnet test -c Release "./test/$projectName.Tests/$projectName.Tests.csproj"
-if ($LASTEXITCODE -ne 0) { throw "dotnet test failed" }
-
-$csproj = "./src/$projectName/$projectName.csproj"
-
-if ($suffix) {
-    & dotnet pack "$csproj" -c Release -o ./artifacts --version-suffix=$suffix
-} else {
-    & dotnet pack "$csproj" -c Release -o ./artifacts
-}
-if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed" }
-
-Pop-Location
