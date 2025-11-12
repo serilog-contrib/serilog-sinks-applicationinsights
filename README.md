@@ -39,9 +39,9 @@ singleton [`TelemetryConfiguration.Active` has been deprecated in the Applicatio
 
 Therefore, now we need to pass in the `TelemetryConfiguration` instance that was added either
 by `services.AddApplicationInsightsTelemetryWorkerService()` (if you're developing
-a [non-http applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/worker-service))
+a [non-http application](https://docs.microsoft.com/en-us/azure/azure-monitor/app/worker-service))
 or `services.AddApplicationInsightsTelemetry()` (if you're developing
-an [ASP.Net Core applciation](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core)) during Startup
+an [ASP.Net Core application](https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core)) during Startup
 in `ConfigureServices`.
 
 ```csharp
@@ -76,7 +76,7 @@ public static class Program
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "An unhandled exception occured during bootstrapping");
+            Log.Fatal(ex, "An unhandled exception occurred during bootstrapping");
         }
         finally
         {
@@ -244,13 +244,13 @@ private class CustomConverter : TraceTelemetryConverter
             // typecast to ISupportProperties so you can manipulate the properties as desired
             ISupportProperties propTelematry = (ISupportProperties)telemetry;
 
-            // find redundent properties
+            // find redundant properties
             var removeProps = new[] { "UserId", "operation_parentId", "operation_Id" };
             removeProps = removeProps.Where(prop => propTelematry.Properties.ContainsKey(prop)).ToArray();
 
             foreach (var prop in removeProps)
             {
-                // remove redundent properties
+                // remove redundant properties
                 propTelematry.Properties.Remove(prop);
             }
 
@@ -334,7 +334,7 @@ System.Threading.Thread.Sleep(1000);
 ## Including Operation Id
 
 Application Insight's operation id is pushed out if you set `operationId` LogEvent property. If it's present, AI's
-operation id will be overriden by the value from this property.
+operation id will be overridden by the value from this property.
 
 This can be set like so:
 

@@ -13,7 +13,7 @@ public abstract class ApplicationInsightsTest
 
     protected ApplicationInsightsTest(ITelemetryConverter converter = null)
     {
-        var tc = new TelemetryConfiguration("", _channel = new UnitTestTelemetryChannel());
+        var tc = new TelemetryConfiguration { TelemetryChannel = _channel = new UnitTestTelemetryChannel() };
 
         Logger = new LoggerConfiguration()
             .WriteTo.ApplicationInsights(tc, converter ?? TelemetryConverter.Traces)
@@ -23,6 +23,7 @@ public abstract class ApplicationInsightsTest
     }
 
     protected ILogger Logger { get; }
+    protected UnitTestTelemetryChannel Channel => _channel;
 
     protected List<ITelemetry> SubmittedTelemetry => _channel.SubmittedTelemetry;
 

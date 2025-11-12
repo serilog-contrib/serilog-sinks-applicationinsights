@@ -16,6 +16,7 @@ using System;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Serilog.Core;
@@ -29,6 +30,9 @@ namespace Serilog.Sinks.ApplicationInsights;
 ///     Inspired by their NLog Appender implementation.
 /// </summary>
 public class ApplicationInsightsSink : ILogEventSink, IDisposable
+#if NET6_0_OR_GREATER
+, IAsyncDisposable
+#endif
 {
     readonly IFormatProvider _formatProvider;
 
@@ -191,6 +195,29 @@ public class ApplicationInsightsSink : ILogEventSink, IDisposable
             IsDisposing = false;
         }
     }
+    
+#if NET6_0_OR_GREATER
+    /// <summary>
+    /// Disposes the sink and flushes telemetry to App Insights.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (IsDisposing || IsDisposed)
+            return;
+        
+        try
+        {
+            IsDisposing = true;
+            if (_telemetryClient is not null) await _telemetryClient.FlushAsync(CancellationToken.None);
+        }
+        finally
+        {
+            _telemetryClient = null;
+            IsDisposed = true;
+            IsDisposing = false;
+        }
+    }
+#endif
 
     #endregion Implementation of IDisposable
 }
