@@ -143,6 +143,10 @@ By default, trace telemetry submits:
 - **rendered message** in trace's standard *message* property.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
+- **operation id** from `operationId` property, `TraceId` property, or `Activity.TraceId` (captured at log time).
+- **operation parent id** from `ParentSpanId` property.
+- **operation name** from `OperationName` property.
+- **component version** from `version` property.
 - **messageTemplate** in *customDimensions*.
 - **custom log properties** as *customDimensions*.
 
@@ -151,6 +155,10 @@ Event telemetry submits:
 - **message template** as *event name*.
 - **renderedMessage** in *customDimensions*.
 - **timestamp** in event's standard *timestamp* property.
+- **operation id** from `operationId` property, `TraceId` property, or `Activity.TraceId` (captured at log time).
+- **operation parent id** from `ParentSpanId` property.
+- **operation name** from `OperationName` property.
+- **component version** from `version` property.
 - **custom log properties** as *customDimensions*.
 
 Exception telemetry submits:
@@ -158,6 +166,10 @@ Exception telemetry submits:
 - **exception** as standard AI exception.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
+- **operation id** from `operationId` property, `TraceId` property, or `Activity.TraceId` (captured at log time).
+- **operation parent id** from `ParentSpanId` property.
+- **operation name** from `OperationName` property.
+- **component version** from `version` property.
 - **custom log properties** as *customDimensions*.
 
 > Note that **log context** properties are also included in *customDimensions* when Serilog is configured
@@ -232,26 +244,26 @@ private class CustomConverter : TraceTelemetryConverter
                 telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
             }
             // post-process the telemetry's context to contain the operation id
-            if (logEvent.Properties.ContainsKey("operation_Id"))
+            if (logEvent.Properties.ContainsKey("operationId"))
             {
-                telemetry.Context.Operation.Id = logEvent.Properties["operation_Id"].ToString();
+                telemetry.Context.Operation.Id = logEvent.Properties["operationId"].ToString();
             }
             // post-process the telemetry's context to contain the operation parent id
-            if (logEvent.Properties.ContainsKey("operation_parentId"))
+            if (logEvent.Properties.ContainsKey("ParentSpanId"))
             {
-                telemetry.Context.Operation.ParentId = logEvent.Properties["operation_parentId"].ToString();
+                telemetry.Context.Operation.ParentId = logEvent.Properties["ParentSpanId"].ToString();
             }
             // typecast to ISupportProperties so you can manipulate the properties as desired
-            ISupportProperties propTelematry = (ISupportProperties)telemetry;
+            ISupportProperties propTelemetry = (ISupportProperties)telemetry;
 
             // find redundant properties
-            var removeProps = new[] { "UserId", "operation_parentId", "operation_Id" };
-            removeProps = removeProps.Where(prop => propTelematry.Properties.ContainsKey(prop)).ToArray();
+            var removeProps = new[] { "UserId", "ParentSpanId", "operationId" };
+            removeProps = removeProps.Where(prop => propTelemetry.Properties.ContainsKey(prop)).ToArray();
 
             foreach (var prop in removeProps)
             {
                 // remove redundant properties
-                propTelematry.Properties.Remove(prop);
+                propTelemetry.Properties.Remove(prop);
             }
 
             yield return telemetry;
@@ -270,7 +282,7 @@ instance, let's include `renderedMessage` in event telemetry:
 ```csharp
 private class IncludeRenderedMessageConverter : EventTelemetryConverter
 {
-    public override void ForwardPropertiesToTelemetryProperties(LogEvent logEvent, 
+    public override void ForwardPropertiesToTelemetryProperties(LogEvent logEvent,
         ISupportProperties telemetryProperties, IFormatProvider formatProvider)
     {
         base.ForwardPropertiesToTelemetryProperties(logEvent, telemetryProperties, formatProvider,
@@ -325,7 +337,7 @@ _telemetryClient.Flush();
 
 await Task.Delay(1000);
 
-// or 
+// or
 
 System.Threading.Thread.Sleep(1000);
 
@@ -333,8 +345,11 @@ System.Threading.Thread.Sleep(1000);
 
 ## Including Operation Id
 
-Application Insight's operation id is pushed out if you set `operationId` LogEvent property. If it's present, AI's
-operation id will be overridden by the value from this property.
+Application Insight's operation id is set from the following sources in order of precedence:
+
+1. `operationId` LogEvent property
+2. `TraceId` LogEvent property
+3. `Activity.TraceId` (captured at log time)
 
 This can be set like so:
 
@@ -357,6 +372,23 @@ public class OperationIdEnricher : ILogEventEnricher
 Application Insight supports component version and is pushed out if you set `version` log event property. If it's
 present, AI's operation version will include the value from this property.
 
+## Using with SerilogTracing
+
+[SerilogTracing](https://github.com/serilog-tracing/serilog-tracing) provides tracing primitives that integrate with Serilog's structured logging. When used with this sink, tracing context is automatically included in Application Insights telemetry.
+
+The following LogEvent properties are mapped to Application Insights telemetry:
+
+| LogEvent Property | Application Insights Telemetry | Notes |
+|-------------------|---------------------------------|-------|
+| `TraceId` | `Context.Operation.Id` | From TraceId captured in LogEvent |
+| `SpanId` | `Id` (for Request/Dependency telemetry) | From SpanId captured in LogEvent |
+| `ParentSpanId` | `Context.Operation.ParentId` | |
+| `OperationName` | `Context.Operation.Name` | |
+| `operationId` | `Context.Operation.Id` | Overrides TraceId |
+| `version` | `Context.Component.Version` | |
+
+Precedence for `Context.Operation.Id`: `operationId` property > `TraceId` property > `Activity.TraceId` (when both `operationId` and `TraceId` properties are absent).
+
 ## Using with Azure Functions
 
 Azure functions has out of the box integration with Application Insights, which automatically logs functions execution
@@ -377,7 +409,7 @@ namespace MyFunctions
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            builder.Services.AddSingleton<ILoggerProvider>((sp) => 
+            builder.Services.AddSingleton<ILoggerProvider>((sp) =>
             {
                 Log.Logger = new LoggerConfiguration()
                     .Enrich.FromLogContext()
@@ -390,7 +422,7 @@ namespace MyFunctions
 }
 ```
 
-Copyright &copy; 2022 Serilog Contributors - Provided under
+Copyright &copy; 2025 Serilog Contributors - Provided under
 the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
 See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)

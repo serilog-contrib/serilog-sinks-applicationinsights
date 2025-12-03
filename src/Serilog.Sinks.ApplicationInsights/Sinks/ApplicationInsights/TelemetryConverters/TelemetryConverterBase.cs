@@ -40,6 +40,26 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
     public const string OperationIdProperty = "operationId";
 
     /// <summary>
+    ///     Property that is included when in log context, will be pushed out as AI trace id.
+    /// </summary>
+    public const string TraceIdProperty = "TraceId";
+
+    /// <summary>
+    ///     Property that is included when in log context, will be pushed out as AI parent span id.
+    /// </summary>
+    public const string ParentSpanIdProperty = "ParentSpanId";
+
+    /// <summary>
+    ///     Property that is included when in log context, will be pushed out as AI span id.
+    /// </summary>
+    public const string SpanIdProperty = "SpanId";
+
+    /// <summary>
+    ///     Property that is included when in log context, will be pushed out as AI operation name.
+    /// </summary>
+    public const string OperationNameProperty = "OperationName";
+
+    /// <summary>
     ///     Property that is included when in log context, will be pushed out as AI component version.
     /// </summary>
     public const string VersionProperty = "version";
@@ -72,7 +92,8 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
         if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
         if (logEvent.Exception == null) throw new ArgumentException("Must have an Exception", nameof(logEvent));
 
-        var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception) {
+        var exceptionTelemetry = new ExceptionTelemetry(logEvent.Exception)
+        {
             SeverityLevel = ToSeverityLevel(logEvent.Level),
             Timestamp = logEvent.Timestamp
         };
@@ -143,15 +164,36 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
 
         if (telemetryProperties is ITelemetry telemetry)
         {
-            if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationId))
-                telemetry.Context.Operation.Id = operationId.ToString().Trim('\"');
-            else
-            {
-                if (logEvent.TraceId is ActivityTraceId traceId)
-                    telemetry.Context.Operation.Id = traceId.ToHexString();
+            // Operation.Id (TraceId)
+            if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationIdProp))
+                telemetry.Context.Operation.Id = operationIdProp.ToString().Trim('"');
+            else if (logEvent.Properties.TryGetValue(TraceIdProperty, out var traceIdProp))
+                telemetry.Context.Operation.Id = traceIdProp.ToString().Trim('"');
+            else if (logEvent.TraceId is ActivityTraceId traceId)
+                telemetry.Context.Operation.Id = traceId.ToHexString();
 
-                if (logEvent.SpanId is ActivitySpanId spanId)
-                    telemetry.Context.Operation.ParentId = spanId.ToHexString();
+            // Operation.ParentId (ParentSpanId)
+            if (logEvent.Properties.TryGetValue(ParentSpanIdProperty, out var parentSpanIdProp))
+                telemetry.Context.Operation.ParentId = parentSpanIdProp.ToString().Trim('"');
+
+            // Operation.Name (OperationName)
+            if (logEvent.Properties.TryGetValue(OperationNameProperty, out var operationNameProp))
+                telemetry.Context.Operation.Name = operationNameProp.ToString().Trim('"');
+
+            // Set Id for RequestTelemetry and DependencyTelemetry
+            if (logEvent.Properties.TryGetValue(SpanIdProperty, out var spanIdProp))
+            {
+                if (telemetry is RequestTelemetry req)
+                    req.Id = spanIdProp.ToString().Trim('"');
+                else if (telemetry is DependencyTelemetry dep)
+                    dep.Id = spanIdProp.ToString().Trim('"');
+            }
+            else if (logEvent.SpanId is ActivitySpanId spanId)
+            {
+                if (telemetry is RequestTelemetry req)
+                    req.Id = spanId.ToHexString();
+                else if (telemetry is DependencyTelemetry dep)
+                    dep.Id = spanId.ToHexString();
             }
 
             if (logEvent.Properties.TryGetValue(VersionProperty, out var version)

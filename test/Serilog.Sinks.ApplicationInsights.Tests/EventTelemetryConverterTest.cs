@@ -40,21 +40,19 @@ public class EventTelemetryConverterTest : ApplicationInsightsTest
     }
 
     [Fact]
-    public void TraceIdAndSpanIdDefaultByDefault()
+    public void TraceIdIsNullByDefault()
     {
         Logger.Information("Hello, {Name}!", "world");
         Assert.Null(LastSubmittedEventTelemetry.Context.Operation.Id);
-        Assert.Null(LastSubmittedEventTelemetry.Context.Operation.ParentId);
     }
 
     [Fact]
-    public void TraceIdAndSpanIdAreSet()
+    public void TraceIdIsSet()
     {
         using Activity activity = new("TestActivity");
         activity.Start();
         Logger.Information("Hello, {Name}!", "world");
         Assert.Equal(activity.TraceId.ToHexString(), LastSubmittedEventTelemetry.Context.Operation.Id);
-        Assert.Equal(activity.SpanId.ToHexString(), LastSubmittedEventTelemetry.Context.Operation.ParentId);
     }
 
     [Fact]
@@ -66,5 +64,26 @@ public class EventTelemetryConverterTest : ApplicationInsightsTest
         Logger.Information("Hello, {operationId}!", operationId);
         Assert.Equal(operationId, LastSubmittedEventTelemetry.Context.Operation.Id);
         Assert.Null(LastSubmittedEventTelemetry.Context.Operation.ParentId);
+    }
+
+    [Fact]
+    public void ParentSpanIdIsSet()
+    {
+        Logger.Information("Test {ParentSpanId}", "parent123");
+        Assert.Equal("parent123", LastSubmittedEventTelemetry.Context.Operation.ParentId);
+    }
+
+    [Fact]
+    public void OperationNameIsSet()
+    {
+        Logger.Information("Test {OperationName}", "MyOperation");
+        Assert.Equal("MyOperation", LastSubmittedEventTelemetry.Context.Operation.Name);
+    }
+
+    [Fact]
+    public void VersionIsSet()
+    {
+        Logger.Information("Test {version}", "1.2.3");
+        Assert.Equal("1.2.3", LastSubmittedEventTelemetry.Context.Component.Version);
     }
 }
