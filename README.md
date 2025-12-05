@@ -143,7 +143,7 @@ By default, trace telemetry submits:
 - **rendered message** in trace's standard *message* property.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
-- **operation id** from `operationId` property, `TraceId` property, or `Activity.TraceId` (captured at log time).
+- **operation id** from `operationId` property, or the `LogEvent.TraceId` property.
 - **operation parent id** from `ParentSpanId` property.
 - **operation name** from `OperationName` property.
 - **component version** from `version` property.
@@ -155,7 +155,7 @@ Event telemetry submits:
 - **message template** as *event name*.
 - **renderedMessage** in *customDimensions*.
 - **timestamp** in event's standard *timestamp* property.
-- **operation id** from `operationId` property, `TraceId` property, or `Activity.TraceId` (captured at log time).
+- **operation id** from `operationId` property, or the `LogEvent.TraceId` property.
 - **operation parent id** from `ParentSpanId` property.
 - **operation name** from `OperationName` property.
 - **component version** from `version` property.
@@ -166,7 +166,7 @@ Exception telemetry submits:
 - **exception** as standard AI exception.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
-- **operation id** from `operationId` property, `TraceId` property, or `Activity.TraceId` (captured at log time).
+- **operation id** from `operationId` property, or the `LogEvent.TraceId` property.
 - **operation parent id** from `ParentSpanId` property.
 - **operation name** from `OperationName` property.
 - **component version** from `version` property.
@@ -349,7 +349,6 @@ Application Insight's operation id is set from the following sources in order of
 
 1. `operationId` LogEvent property
 2. `TraceId` LogEvent property
-3. `Activity.TraceId` (captured at log time)
 
 This can be set like so:
 
@@ -387,7 +386,7 @@ The following LogEvent properties are mapped to Application Insights telemetry:
 | `operationId` | `Context.Operation.Id` | Overrides TraceId |
 | `version` | `Context.Component.Version` | |
 
-Precedence for `Context.Operation.Id`: `operationId` property > `TraceId` property > `Activity.TraceId` (when both `operationId` and `TraceId` properties are absent).
+Precedence for `Context.Operation.Id`: `operationId` property > `TraceId` property (when both `operationId` and `TraceId` properties are absent).
 
 ## Using with Azure Functions
 

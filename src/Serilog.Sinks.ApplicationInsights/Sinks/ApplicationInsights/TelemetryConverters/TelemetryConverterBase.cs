@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Diagnostics;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
@@ -40,19 +36,9 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
     public const string OperationIdProperty = "operationId";
 
     /// <summary>
-    ///     Property that is included when in log context, will be pushed out as AI trace id.
-    /// </summary>
-    public const string TraceIdProperty = "TraceId";
-
-    /// <summary>
     ///     Property that is included when in log context, will be pushed out as AI parent span id.
     /// </summary>
     public const string ParentSpanIdProperty = "ParentSpanId";
-
-    /// <summary>
-    ///     Property that is included when in log context, will be pushed out as AI span id.
-    /// </summary>
-    public const string SpanIdProperty = "SpanId";
 
     /// <summary>
     ///     Property that is included when in log context, will be pushed out as AI operation name.
@@ -167,8 +153,6 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
             // Operation.Id (TraceId)
             if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationIdProp))
                 telemetry.Context.Operation.Id = operationIdProp.ToString().Trim('"');
-            else if (logEvent.Properties.TryGetValue(TraceIdProperty, out var traceIdProp))
-                telemetry.Context.Operation.Id = traceIdProp.ToString().Trim('"');
             else if (logEvent.TraceId is ActivityTraceId traceId)
                 telemetry.Context.Operation.Id = traceId.ToHexString();
 
@@ -181,14 +165,7 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
                 telemetry.Context.Operation.Name = operationNameProp.ToString().Trim('"');
 
             // Set Id for RequestTelemetry and DependencyTelemetry
-            if (logEvent.Properties.TryGetValue(SpanIdProperty, out var spanIdProp))
-            {
-                if (telemetry is RequestTelemetry req)
-                    req.Id = spanIdProp.ToString().Trim('"');
-                else if (telemetry is DependencyTelemetry dep)
-                    dep.Id = spanIdProp.ToString().Trim('"');
-            }
-            else if (logEvent.SpanId is ActivitySpanId spanId)
+            if (logEvent.SpanId is ActivitySpanId spanId)
             {
                 if (telemetry is RequestTelemetry req)
                     req.Id = spanId.ToHexString();
