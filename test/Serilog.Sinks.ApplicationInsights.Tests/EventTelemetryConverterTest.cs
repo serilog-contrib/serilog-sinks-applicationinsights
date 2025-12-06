@@ -76,7 +76,9 @@ public class EventTelemetryConverterTest : ApplicationInsightsTest
     [Fact]
     public void OperationNameIsSet()
     {
-        Logger.Information("Test {OperationName}", "MyOperation");
+        using Activity activity = new("MyOperation");
+        activity.Start();
+        Logger.Information("Test");
         Assert.Equal("MyOperation", LastSubmittedEventTelemetry.Context.Operation.Name);
     }
 

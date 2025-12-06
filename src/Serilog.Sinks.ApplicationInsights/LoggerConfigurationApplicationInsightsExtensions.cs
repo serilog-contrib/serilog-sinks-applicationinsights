@@ -1,11 +1,11 @@
 ﻿// Copyright 2016 Serilog Contributors
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,8 +49,7 @@ public static class LoggerConfigurationApplicationInsightsExtensions
         var client = new TelemetryClient(telemetryConfiguration ?? TelemetryConfiguration.Active);
 #pragma warning restore CS0618
 
-        return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter),
-            restrictedToMinimumLevel, levelSwitch);
+        return loggerConfiguration.ApplicationInsights(client, telemetryConverter, restrictedToMinimumLevel, levelSwitch);
     }
 
     /// <summary>
@@ -72,8 +71,7 @@ public static class LoggerConfigurationApplicationInsightsExtensions
         var client = new TelemetryClient(TelemetryConfiguration.Active);
 #pragma warning restore CS0618
 
-        return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter),
-            restrictedToMinimumLevel, levelSwitch);
+        return loggerConfiguration.ApplicationInsights(client, telemetryConverter, restrictedToMinimumLevel, levelSwitch);
     }
 
     /// <summary>
@@ -93,10 +91,13 @@ public static class LoggerConfigurationApplicationInsightsExtensions
         LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
         LoggingLevelSwitch levelSwitch = null)
     {
-        return loggerConfiguration.Sink(new ApplicationInsightsSink(telemetryClient, telemetryConverter),
-            restrictedToMinimumLevel, levelSwitch);
-    }
+        var wrapper = LoggerSinkConfiguration.Wrap(
+             wrappedSink => new ApplicationInsightsSink(telemetryClient, telemetryConverter),
+             configure => { }
+        );
 
+        return loggerConfiguration.Sink(wrapper, restrictedToMinimumLevel, levelSwitch);
+    }
 
     /// <summary>
     ///     Adds a Serilog sink that writes <see cref="LogEvent">log events</see> to Microsoft Application Insights
@@ -125,7 +126,6 @@ public static class LoggerConfigurationApplicationInsightsExtensions
 
         var client = new TelemetryClient(config);
 
-        return loggerConfiguration.Sink(new ApplicationInsightsSink(client, telemetryConverter),
-            restrictedToMinimumLevel, levelSwitch);
+        return loggerConfiguration.ApplicationInsights(client, telemetryConverter, restrictedToMinimumLevel, levelSwitch);
     }
 }

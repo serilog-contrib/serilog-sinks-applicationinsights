@@ -76,7 +76,9 @@ public class TraceTelemetryConverterTest : ApplicationInsightsTest
     [Fact]
     public void OperationNameIsSet()
     {
-        Logger.Information("Test {OperationName}", "MyOperation");
+        using Activity activity = new("MyOperation");
+        activity.Start();
+        Logger.Information("Test");
         Assert.Equal("MyOperation", LastSubmittedTraceTelemetry.Context.Operation.Name);
     }
 

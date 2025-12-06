@@ -1,11 +1,11 @@
 ﻿// Copyright 2016 Serilog Contributors
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -101,6 +102,15 @@ public class ApplicationInsightsSink : ILogEventSink, IDisposable
 
         try
         {
+            var activity = Activity.Current;
+            if (activity is { OperationName: not null })
+            {
+                logEvent.AddOrUpdateProperty(
+                    new LogEventProperty(
+                        TelemetryConverterBase.OperationNameProperty,
+                        new ScalarValue(activity.OperationName)));
+            }
+
             var telemetries = _telemetryConverter.Convert(logEvent, _formatProvider);
 
             // if 'null' is returned (& we therefore there's nothing to track), the logEvent is basically skipped
@@ -121,7 +131,7 @@ public class ApplicationInsightsSink : ILogEventSink, IDisposable
 
     #endregion
 
-    #region AI specifc Helper methods
+    #region AI specific Helper methods
 
     /// <summary>
     ///     Hands over the <paramref name="telemetry" /> to the AI telemetry client.
@@ -139,7 +149,7 @@ public class ApplicationInsightsSink : ILogEventSink, IDisposable
         _telemetryClient?.Track(telemetry);
     }
 
-    #endregion AI specifc Helper methods
+    #endregion AI specific Helper methods
 
     #region Implementation of IDisposable
 
@@ -195,7 +205,7 @@ public class ApplicationInsightsSink : ILogEventSink, IDisposable
             IsDisposing = false;
         }
     }
-    
+
 #if NET6_0_OR_GREATER
     /// <summary>
     /// Disposes the sink and flushes telemetry to App Insights.
@@ -204,7 +214,7 @@ public class ApplicationInsightsSink : ILogEventSink, IDisposable
     {
         if (IsDisposing || IsDisposed)
             return;
-        
+
         try
         {
             IsDisposing = true;
