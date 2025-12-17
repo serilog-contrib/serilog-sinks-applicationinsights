@@ -6,7 +6,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests;
 
 public class TraceTelemetryConverterTest : ApplicationInsightsTest
 {
-    public TraceTelemetryConverterTest() : base(new TraceTelemetryConverter())
+    public TraceTelemetryConverterTest() : base(new TraceTelemetryConverter(), true, true)
     {
     }
 

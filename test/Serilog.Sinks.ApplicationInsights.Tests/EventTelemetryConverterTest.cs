@@ -6,7 +6,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests;
 
 public class EventTelemetryConverterTest : ApplicationInsightsTest
 {
-    public EventTelemetryConverterTest() : base(new EventTelemetryConverter())
+    public EventTelemetryConverterTest() : base(new EventTelemetryConverter(), true, true)
     {
     }
 
