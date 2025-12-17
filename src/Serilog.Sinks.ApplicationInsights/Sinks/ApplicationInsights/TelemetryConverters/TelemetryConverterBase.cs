@@ -183,9 +183,32 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
                 telemetry.Context.Component.Version = version.ToString().Trim('\"');
         }
 
+        ForwardActivityBaggage(logEvent, telemetryProperties, formatProvider);
+
         foreach (var property in logEvent.Properties.Where(property =>
                      property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))
             ValueFormatter.Format(property.Key, property.Value, telemetryProperties.Properties);
+    }
+
+    private static void ForwardActivityBaggage(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
+    {
+        if (!logEvent.Properties.TryGetValue(BaggageProperty, out var baggageProp)
+            || baggageProp is not StructureValue baggageStructure)
+        {
+            return;
+        }
+
+        foreach (var item in baggageStructure.Properties)
+        {
+            var key = item.Name;
+            if (!telemetryProperties.Properties.ContainsKey(key))
+            {
+                continue;
+            }
+
+            var value = item.Value.ToString(null, formatProvider).Trim('"');
+            telemetryProperties.Properties.Add(key, value);
+        }
     }
 
     /// <summary>
