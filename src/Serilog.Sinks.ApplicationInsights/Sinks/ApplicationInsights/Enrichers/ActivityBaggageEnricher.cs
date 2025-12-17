@@ -36,7 +36,7 @@ public class ActivityBaggageEnricher : ILogEventEnricher
             .Where(IsValidBaggageItem)
             .Select(item => propertyFactory.CreateProperty(item.Key, item.Value));
 
-        LogEventProperty baggageProperty = propertyFactory.CreateProperty(TelemetryConverterBase.BaggageProperty, items, true);
+        LogEventProperty baggageProperty = new(TelemetryConverterBase.BaggageProperty, new StructureValue(items));
         logEvent.AddPropertyIfAbsent(baggageProperty);
     }
 

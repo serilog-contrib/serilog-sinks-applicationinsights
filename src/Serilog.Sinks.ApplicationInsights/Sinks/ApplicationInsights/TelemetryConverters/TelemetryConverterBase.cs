@@ -178,30 +178,33 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
                     dep.Id = spanId.ToHexString();
             }
 
-            if (logEvent.Properties.TryGetValue(VersionProperty, out var version)
-                && telemetry.Context?.Component != null)
+            if (telemetry.Context?.Component != null
+                && logEvent.Properties.TryGetValue(VersionProperty, out var version))
                 telemetry.Context.Component.Version = version.ToString().Trim('\"');
         }
 
-        ForwardActivityBaggage(logEvent, telemetryProperties, formatProvider);
+        var baggageWasForwarded = ForwardActivityBaggage(logEvent, telemetryProperties, formatProvider);
 
-        foreach (var property in logEvent.Properties.Where(property =>
-                     property.Value != null && !telemetryProperties.Properties.ContainsKey(property.Key)))
+        var filteredProperties = logEvent.Properties.Where(property =>
+                     property.Value != null
+                     && !(baggageWasForwarded && BaggageProperty.Equals(property.Key, StringComparison.Ordinal))
+                     && !telemetryProperties.Properties.ContainsKey(property.Key));
+        foreach (var property in filteredProperties)
             ValueFormatter.Format(property.Key, property.Value, telemetryProperties.Properties);
     }
 
-    private static void ForwardActivityBaggage(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
+    private static bool ForwardActivityBaggage(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
     {
         if (!logEvent.Properties.TryGetValue(BaggageProperty, out var baggageProp)
             || baggageProp is not StructureValue baggageStructure)
         {
-            return;
+            return false;
         }
 
         foreach (var item in baggageStructure.Properties)
         {
             var key = item.Name;
-            if (!telemetryProperties.Properties.ContainsKey(key))
+            if (telemetryProperties.Properties.ContainsKey(key))
             {
                 continue;
             }
@@ -209,6 +212,8 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
             var value = item.Value.ToString(null, formatProvider).Trim('"');
             telemetryProperties.Properties.Add(key, value);
         }
+
+        return true;
     }
 
     /// <summary>

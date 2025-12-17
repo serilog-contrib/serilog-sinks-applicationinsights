@@ -78,4 +78,29 @@ public class TraceTelemetryConverterTest : ApplicationInsightsTest
         Logger.Information("Test {version}", "1.2.3");
         Assert.Equal("1.2.3", LastSubmittedTraceTelemetry.Context.Component.Version);
     }
+
+    [Fact]
+    public void OperationNameIsSet()
+    {
+        using Activity activity = new("MyOperation");
+        activity.Start();
+
+        Logger.Information("Test");
+
+        Assert.Equal("MyOperation", LastSubmittedTraceTelemetry.Context.Operation.Name);
+    }
+
+    [Fact]
+    public void BaggageIsSet()
+    {
+        using Activity activity = new("TestActivity");
+        activity.AddBaggage("key1", "value1");
+        activity.AddBaggage("key2", "value2");
+        activity.Start();
+
+        Logger.Information("Hello, world!");
+
+        Assert.Equal("value1", LastSubmittedTraceTelemetry.Properties["key1"]);
+        Assert.Equal("value2", LastSubmittedTraceTelemetry.Properties["key2"]);
+    }
 }
