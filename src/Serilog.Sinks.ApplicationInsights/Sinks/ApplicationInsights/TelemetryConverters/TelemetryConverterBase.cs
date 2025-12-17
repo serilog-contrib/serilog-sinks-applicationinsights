@@ -57,13 +57,52 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
 
     static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:lj}");
 
+    private readonly bool _includeOperationIdPropertyAsTelemetryProperty;
+    private readonly bool _includeParentSpanIdPropertyAsTelemetryProperty;
+    private readonly bool _includeOperationNamePropertyAsTelemetryProperty;
+    private readonly bool _includeVersionPropertyAsTelemetryProperty;
+
     /// <summary>
     ///     Creates an instance of <see cref="TelemetryConverterBase" /> using default value formatter (
     ///     <see cref="ApplicationInsightsJsonValueFormatter" />).
     /// </summary>
     public TelemetryConverterBase()
+        : this(false, false, false, false)
+    {
+    }
+
+    /// <summary>
+    ///     Creates an instance of <see cref="TelemetryConverterBase" /> using default value formatter (
+    ///     <see cref="ApplicationInsightsJsonValueFormatter" />).
+    /// </summary>
+    /// <param name="includeOperationIdPropertyAsTelemetryProperty">
+    ///   if set to <c>true</c> the <see cref="OperationIdProperty" /> is added to the
+    ///   telemetry properties. Otherwise it is only set as <c>ITelemetry.Context.Operation.Id</c>.
+    /// </param>
+    /// <param name="includeParentSpanIdPropertyAsTelemetryProperty">
+    ///   if set to <c>true</c> the <see cref="ParentSpanIdProperty" /> is added to the
+    ///   telemetry properties. Otherwise it is only set as <c>ITelemetry.Context.Operation.ParentId</c>.
+    /// </param>
+    /// <param name="includeOperationNamePropertyAsTelemetryProperty">
+    ///   if set to <c>true</c> the <see cref="OperationNameProperty" /> is added to the
+    ///   telemetry properties. Otherwise it is only set as <c>ITelemetry.Context.Operation.Name</c>.
+    /// </param>
+    /// <param name="includeVersionPropertyAsTelemetryProperty">
+    ///   if set to <c>true</c> the <see cref="VersionProperty" /> is added to the
+    ///   telemetry properties. Otherwise it is only set as <c>ITelemetry.Context.Component.Version</c>.
+    /// </param>
+    public TelemetryConverterBase(
+        bool includeOperationIdPropertyAsTelemetryProperty,
+        bool includeParentSpanIdPropertyAsTelemetryProperty,
+        bool includeOperationNamePropertyAsTelemetryProperty,
+        bool includeVersionPropertyAsTelemetryProperty)
     {
         ValueFormatter = new ApplicationInsightsJsonValueFormatter();
+
+        _includeOperationIdPropertyAsTelemetryProperty = includeOperationIdPropertyAsTelemetryProperty;
+        _includeParentSpanIdPropertyAsTelemetryProperty = includeParentSpanIdPropertyAsTelemetryProperty;
+        _includeOperationNamePropertyAsTelemetryProperty = includeOperationNamePropertyAsTelemetryProperty;
+        _includeVersionPropertyAsTelemetryProperty = includeVersionPropertyAsTelemetryProperty;
     }
 
 #pragma warning disable CS1591
@@ -155,28 +194,7 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
 
         if (telemetryProperties is ITelemetry telemetry)
         {
-            // Operation.Id (TraceId)
-            if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationIdProp))
-                telemetry.Context.Operation.Id = operationIdProp.ToString().Trim('"');
-            else if (logEvent.TraceId is ActivityTraceId traceId)
-                telemetry.Context.Operation.Id = traceId.ToHexString();
-
-            // Operation.ParentId (ParentSpanId)
-            if (logEvent.Properties.TryGetValue(ParentSpanIdProperty, out var parentSpanIdProp))
-                telemetry.Context.Operation.ParentId = parentSpanIdProp.ToString().Trim('"');
-
-            // Operation.Name (OperationName)
-            if (logEvent.Properties.TryGetValue(OperationNameProperty, out var operationNameProp))
-                telemetry.Context.Operation.Name = operationNameProp.ToString().Trim('"');
-
-            // Set Id for RequestTelemetry and DependencyTelemetry
-            if (logEvent.SpanId is ActivitySpanId spanId)
-            {
-                if (telemetry is RequestTelemetry req)
-                    req.Id = spanId.ToHexString();
-                else if (telemetry is DependencyTelemetry dep)
-                    dep.Id = spanId.ToHexString();
-            }
+            PopulateTelemetryFromLogEvent(logEvent, telemetry);
 
             if (telemetry.Context?.Component != null
                 && logEvent.Properties.TryGetValue(VersionProperty, out var version))
@@ -184,13 +202,33 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
         }
 
         var baggageWasForwarded = ForwardActivityBaggage(logEvent, telemetryProperties, formatProvider);
+        ForwardSimpleProperties(logEvent, telemetryProperties, baggageWasForwarded);
+    }
 
-        var filteredProperties = logEvent.Properties.Where(property =>
-                     property.Value != null
-                     && !(baggageWasForwarded && BaggageProperty.Equals(property.Key, StringComparison.Ordinal))
-                     && !telemetryProperties.Properties.ContainsKey(property.Key));
-        foreach (var property in filteredProperties)
-            ValueFormatter.Format(property.Key, property.Value, telemetryProperties.Properties);
+    private static void PopulateTelemetryFromLogEvent(LogEvent logEvent, ITelemetry telemetry)
+    {
+        // Operation.Id (TraceId)
+        if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationIdProp))
+            telemetry.Context.Operation.Id = operationIdProp.ToString().Trim('"');
+        else if (logEvent.TraceId is ActivityTraceId traceId)
+            telemetry.Context.Operation.Id = traceId.ToHexString();
+
+        // Operation.ParentId (ParentSpanId)
+        if (logEvent.Properties.TryGetValue(ParentSpanIdProperty, out var parentSpanIdProp))
+            telemetry.Context.Operation.ParentId = parentSpanIdProp.ToString().Trim('"');
+
+        // Operation.Name (OperationName)
+        if (logEvent.Properties.TryGetValue(OperationNameProperty, out var operationNameProp))
+            telemetry.Context.Operation.Name = operationNameProp.ToString().Trim('"');
+
+        // Set Id for RequestTelemetry and DependencyTelemetry
+        if (logEvent.SpanId is ActivitySpanId spanId)
+        {
+            if (telemetry is RequestTelemetry req)
+                req.Id = spanId.ToHexString();
+            else if (telemetry is DependencyTelemetry dep)
+                dep.Id = spanId.ToHexString();
+        }
     }
 
     private static bool ForwardActivityBaggage(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
@@ -214,6 +252,27 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
         }
 
         return true;
+    }
+
+    private void ForwardSimpleProperties(LogEvent logEvent, ISupportProperties telemetryProperties, bool skipBaggage)
+    {
+        var skipOperationId = !_includeOperationIdPropertyAsTelemetryProperty;
+        var skipParentSpanId = !_includeParentSpanIdPropertyAsTelemetryProperty;
+        var skipOperationName = !_includeOperationNamePropertyAsTelemetryProperty;
+        var skipVersion = !_includeVersionPropertyAsTelemetryProperty;
+
+        foreach (var property in logEvent.Properties)
+        {
+            if (property.Value is null) continue;
+            if (skipOperationId && OperationIdProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
+            if (skipParentSpanId && ParentSpanIdProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
+            if (skipOperationName && OperationNameProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
+            if (skipVersion && VersionProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
+            if (skipBaggage && BaggageProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
+            if (telemetryProperties.Properties.ContainsKey(property.Key)) continue;
+
+            ValueFormatter.Format(property.Key, property.Value, telemetryProperties.Properties);
+        }
     }
 
     /// <summary>

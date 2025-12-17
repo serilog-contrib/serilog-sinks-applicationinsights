@@ -2,7 +2,7 @@
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 using Xunit;
 
-namespace Serilog.Sinks.ApplicationInsights.Tests;
+namespace Serilog.Sinks.ApplicationInsights.Tests.TelemetryConverters;
 
 public class DottedOutFormattingTest : ApplicationInsightsTest
 {
