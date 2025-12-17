@@ -46,6 +46,11 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
     public const string OperationNameProperty = "OperationName";
 
     /// <summary>
+    ///     Property that is included when in log context, will be pushed out as AI telemetry properties.
+    /// </summary>
+    public const string BaggageProperty = "Baggage";
+
+    /// <summary>
     ///     Property that is included when in log context, will be pushed out as AI component version.
     /// </summary>
     public const string VersionProperty = "version";

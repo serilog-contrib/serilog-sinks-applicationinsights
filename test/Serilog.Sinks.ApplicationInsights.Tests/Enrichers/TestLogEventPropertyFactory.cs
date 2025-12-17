@@ -11,5 +11,17 @@ internal class TestLogEventPropertyFactory : ILogEventPropertyFactory
     public static TestLogEventPropertyFactory Instance { get; } = new();
 
     public LogEventProperty CreateProperty(string name, object value, bool destructureObjects = false)
-        => new(name, new ScalarValue(value));
+    {
+        LogEventPropertyValue logEventPropertyValue;
+        if (destructureObjects && value is IEnumerable<LogEventProperty> logEventProperties)
+        {
+            logEventPropertyValue = new StructureValue(logEventProperties);
+        }
+        else
+        {
+            logEventPropertyValue = new ScalarValue(value);
+        }
+
+        return new LogEventProperty(name, logEventPropertyValue);
+    }
 }
