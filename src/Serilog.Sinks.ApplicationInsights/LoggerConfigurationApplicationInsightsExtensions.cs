@@ -91,12 +91,7 @@ public static class LoggerConfigurationApplicationInsightsExtensions
         LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
         LoggingLevelSwitch levelSwitch = null)
     {
-        var wrapper = LoggerSinkConfiguration.Wrap(
-             wrappedSink => new ApplicationInsightsSink(telemetryClient, telemetryConverter),
-             configure => { }
-        );
-
-        return loggerConfiguration.Sink(wrapper, restrictedToMinimumLevel, levelSwitch);
+        return loggerConfiguration.Sink(new ApplicationInsightsSink(telemetryClient, telemetryConverter), restrictedToMinimumLevel, levelSwitch);
     }
 
     /// <summary>
