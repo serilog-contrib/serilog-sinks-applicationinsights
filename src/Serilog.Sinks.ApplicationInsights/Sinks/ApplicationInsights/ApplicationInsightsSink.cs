@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Serilog.Core;
@@ -102,15 +98,6 @@ public class ApplicationInsightsSink : ILogEventSink, IDisposable
 
         try
         {
-            var activity = Activity.Current;
-            if (activity is { OperationName: not null })
-            {
-                logEvent.AddOrUpdateProperty(
-                    new LogEventProperty(
-                        TelemetryConverterBase.OperationNameProperty,
-                        new ScalarValue(activity.OperationName)));
-            }
-
             var telemetries = _telemetryConverter.Convert(logEvent, _formatProvider);
 
             // if 'null' is returned (& we therefore there's nothing to track), the logEvent is basically skipped

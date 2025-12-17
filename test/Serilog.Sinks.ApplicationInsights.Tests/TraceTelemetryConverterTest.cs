@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 using Xunit;
 
@@ -71,15 +70,6 @@ public class TraceTelemetryConverterTest : ApplicationInsightsTest
     {
         Logger.Information("Test {ParentSpanId}", "parent123");
         Assert.Equal("parent123", LastSubmittedTraceTelemetry.Context.Operation.ParentId);
-    }
-
-    [Fact]
-    public void OperationNameIsSet()
-    {
-        using Activity activity = new("MyOperation");
-        activity.Start();
-        Logger.Information("Test");
-        Assert.Equal("MyOperation", LastSubmittedTraceTelemetry.Context.Operation.Name);
     }
 
     [Fact]
