@@ -286,7 +286,7 @@ private class IncludeRenderedMessageConverter : EventTelemetryConverter
 ### Or: Where did my Messages go?
 
 As explained by
-the [Application Insights documentation](https://azure.microsoft.com/en-us/documentation/articles/app-insights-api-custom-events-metrics/#flushing-data)
+the [Application Insights documentation](https://learn.microsoft.com/en-us/azure/azure-monitor/app/classic-api?tabs=dotnet#flushing-data)
 , the default behaviour of the AI client is to buffer messages and send them to AI in batches whenever the client seems
 fit. However, this may lead to lost messages when your application terminates while there are still unsent messages in
 said buffer.
