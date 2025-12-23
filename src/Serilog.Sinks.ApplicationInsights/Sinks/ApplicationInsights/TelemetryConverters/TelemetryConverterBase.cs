@@ -180,7 +180,7 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
         if (telemetryProperties == null) throw new ArgumentNullException(nameof(telemetryProperties));
 
         if (includeLogLevel)
-            telemetryProperties.Properties.Add(TelemetryPropertiesLogLevel, logEvent.Level.ToString());
+            telemetryProperties.Properties.Add(TelemetryPropertiesLogLevel, Enum.GetName(typeof(LogEventLevel), logEvent.Level));
 
         if (includeRenderedMessage)
         {
