@@ -57,10 +57,10 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
 
     static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:lj}");
 
-    private readonly bool _includeOperationIdPropertyAsTelemetryProperty;
-    private readonly bool _includeParentSpanIdPropertyAsTelemetryProperty;
-    private readonly bool _includeOperationNamePropertyAsTelemetryProperty;
-    private readonly bool _includeVersionPropertyAsTelemetryProperty;
+    readonly bool _includeOperationIdPropertyAsTelemetryProperty;
+    readonly bool _includeParentSpanIdPropertyAsTelemetryProperty;
+    readonly bool _includeOperationNamePropertyAsTelemetryProperty;
+    readonly bool _includeVersionPropertyAsTelemetryProperty;
 
     /// <summary>
     ///     Creates an instance of <see cref="TelemetryConverterBase" /> using default value formatter (
