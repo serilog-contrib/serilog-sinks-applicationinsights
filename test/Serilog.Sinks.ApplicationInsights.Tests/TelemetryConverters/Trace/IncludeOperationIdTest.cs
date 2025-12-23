@@ -6,7 +6,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests.TelemetryConverters.Trace;
 public class IncludeOperationIdTest : ApplicationInsightsTest
 {
     public IncludeOperationIdTest()
-        : base(new TraceTelemetryConverter(true, false, false, false), true, true)
+        : base(new TraceTelemetryConverter(true, false, false, false, true), true, true)
     {
     }
 

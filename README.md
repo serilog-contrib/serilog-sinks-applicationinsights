@@ -153,10 +153,10 @@ By default, trace telemetry submits:
 - **rendered message** in trace's standard *message* property.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
-- **operation id** from `operationId` property, or the `LogEvent.TraceId` property.
+- **operation id** from `OperationId` property, or the `LogEvent.TraceId` property.
 - **operation parent id** from `ParentSpanId` property.
 - **operation name** from `OperationName` property.
-- **component version** from `version` property.
+- **component version** from `Version` property.
 - **messageTemplate** in *customDimensions*.
 - **custom log properties** as *customDimensions*.
 
@@ -165,10 +165,10 @@ Event telemetry submits:
 - **message template** as *event name*.
 - **renderedMessage** in *customDimensions*.
 - **timestamp** in event's standard *timestamp* property.
-- **operation id** from `operationId` property, or the `LogEvent.TraceId` property.
+- **operation id** from `OperationId` property, or the `LogEvent.TraceId` property.
 - **operation parent id** from `ParentSpanId` property.
 - **operation name** from `OperationName` property.
-- **component version** from `version` property.
+- **component version** from `Version` property.
 - **custom log properties** as *customDimensions*.
 
 Exception telemetry submits:
@@ -176,10 +176,10 @@ Exception telemetry submits:
 - **exception** as standard AI exception.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
-- **operation id** from `operationId` property, or the `LogEvent.TraceId` property.
+- **operation id** from `OperationId` property, or the `LogEvent.TraceId` property.
 - **operation parent id** from `ParentSpanId` property.
 - **operation name** from `OperationName` property.
-- **component version** from `version` property.
+- **component version** from `Version` property.
 - **custom log properties** as *customDimensions*.
 
 > Note that **log context** properties are also included in *customDimensions* when Serilog is configured
@@ -356,7 +356,7 @@ System.Threading.Thread.Sleep(1000);
 
 Application Insight's operation id is set from the following sources in order of precedence:
 
-1. `operationId` LogEvent property
+1. `OperationId` LogEvent property
 2. `TraceId` LogEvent property
 
 This can be set like so:
@@ -377,7 +377,7 @@ public class OperationIdEnricher : ILogEventEnricher
 
 ## Including Version
 
-Application Insight supports component version and is pushed out if you set `version` log event property. If it's
+Application Insight supports component version and is pushed out if you set `Version` log event property. If it's
 present, AI's operation version will include the value from this property.
 
 ## Using with SerilogTracing
@@ -392,12 +392,12 @@ The following `LogEvent` properties are mapped to Application Insights telemetry
 | `SpanId` | `Id` (for Request/Dependency telemetry) | From SpanId captured in LogEvent |
 | `ParentSpanId` | `Context.Operation.ParentId` | |
 | `OperationName` | `Context.Operation.Name` | |
-| `operationId` | `Context.Operation.Id` | Overrides TraceId |
-| `version` | `Context.Component.Version` | |
+| `OperationId` | `Context.Operation.Id` | Overrides TraceId |
+| `Version` | `Context.Component.Version` | |
 
 If present, `Baggage` is forwarded to Application Insights custom dimensions (`telemetry.Properties`).
 
-Precedence for `Context.Operation.Id`: `operationId` property > `TraceId` property (when both `operationId` and `TraceId` properties are absent).
+Precedence for `Context.Operation.Id`: `OperationId` property > `TraceId` property (when both `OperationId` and `TraceId` properties are absent).
 
 ### Enriching from `Activity` (explicit opt-in)
 

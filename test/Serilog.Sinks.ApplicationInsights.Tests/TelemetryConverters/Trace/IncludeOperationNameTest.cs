@@ -6,18 +6,20 @@ namespace Serilog.Sinks.ApplicationInsights.Tests.TelemetryConverters.Trace;
 public class IncludeOperationNameTest : ApplicationInsightsTest
 {
     public IncludeOperationNameTest()
-        : base(new TraceTelemetryConverter(false, false, true, false), true, true)
+        : base(new TraceTelemetryConverter(false, false, true, false, true), true, true)
     {
     }
 
-    [Fact]
-    public void OperationIdIsSetAsTraceProperty()
+    [Theory]
+    [InlineData("Hello, {operationName}!", "operationName", "foo-operation-name")]
+    [InlineData("Hello, {OperationName}!", "OperationName", "bar-operation-name")]
+    public void OperationIdIsSetAsTraceProperty(string pattern, string operationNameKey, string expectedOperationName)
     {
         using var activity = new System.Diagnostics.Activity("TestActivity");
         activity.Start();
 
-        Logger.Information("Hello, {OperationName}!", "foo-operation-name");
+        Logger.Information(pattern, expectedOperationName);
 
-        Assert.Equal("foo-operation-name", LastSubmittedTraceTelemetry.Properties["OperationName"]);
+        Assert.Equal(expectedOperationName, LastSubmittedTraceTelemetry.Properties[operationNameKey]);
     }
 }

@@ -6,7 +6,7 @@ namespace Serilog.Sinks.ApplicationInsights.Tests.TelemetryConverters.Event;
 public class IncludeOperationIdTest : ApplicationInsightsTest
 {
     public IncludeOperationIdTest()
-        : base(new EventTelemetryConverter(true, false, false, false), true, true)
+        : base(new EventTelemetryConverter(true, false, false, false, true), true, true)
     {
     }
 

@@ -10,23 +10,25 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 public class EventTelemetryConverter : TelemetryConverterBase
 {
-    /// <inheritdoc cref="EventTelemetryConverter(bool, bool, bool, bool)"/>
+    /// <inheritdoc cref="EventTelemetryConverter(bool, bool, bool, bool, bool)"/>
     public EventTelemetryConverter()
-        : this(false, false, false, false)
+        : this(false, false, false, false, true)
     {
     }
 
-    /// <inheritdoc cref="TelemetryConverterBase(bool, bool, bool, bool)"/>
+    /// <inheritdoc cref="TelemetryConverterBase(bool, bool, bool, bool, bool)"/>
     public EventTelemetryConverter(
         bool includeOperationIdPropertyAsTelemetryProperty,
         bool includeParentSpanIdPropertyAsTelemetryProperty,
         bool includeOperationNamePropertyAsTelemetryProperty,
-        bool includeVersionPropertyAsTelemetryProperty)
+        bool includeVersionPropertyAsTelemetryProperty,
+        bool ignorePropertyNameCase)
                : base(
             includeOperationIdPropertyAsTelemetryProperty,
             includeParentSpanIdPropertyAsTelemetryProperty,
             includeOperationNamePropertyAsTelemetryProperty,
-            includeVersionPropertyAsTelemetryProperty)
+            includeVersionPropertyAsTelemetryProperty,
+            ignorePropertyNameCase)
     {
     }
 

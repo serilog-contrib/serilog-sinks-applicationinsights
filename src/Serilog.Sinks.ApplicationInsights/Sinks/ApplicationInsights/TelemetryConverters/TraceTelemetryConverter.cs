@@ -14,23 +14,25 @@ public class TraceTelemetryConverter : TelemetryConverterBase
 {
     static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:lj}");
 
-    /// <inheritdoc cref="EventTelemetryConverter(bool, bool, bool, bool)"/>
+    /// <inheritdoc cref="EventTelemetryConverter(bool, bool, bool, bool, bool)"/>
     public TraceTelemetryConverter()
-        : this(false, false, false, false)
+        : this(false, false, false, false, true)
     {
     }
 
-    /// <inheritdoc cref="TelemetryConverterBase(bool, bool, bool, bool)"/>
+    /// <inheritdoc cref="TelemetryConverterBase(bool, bool, bool, bool, bool)"/>
     public TraceTelemetryConverter(
         bool includeOperationIdPropertyAsTelemetryProperty,
         bool includeParentSpanIdPropertyAsTelemetryProperty,
         bool includeOperationNamePropertyAsTelemetryProperty,
-        bool includeVersionPropertyAsTelemetryProperty)
+        bool includeVersionPropertyAsTelemetryProperty,
+        bool ignorePropertyNameCase)
         : base(
             includeOperationIdPropertyAsTelemetryProperty,
             includeParentSpanIdPropertyAsTelemetryProperty,
             includeOperationNamePropertyAsTelemetryProperty,
-            includeVersionPropertyAsTelemetryProperty)
+            includeVersionPropertyAsTelemetryProperty,
+            ignorePropertyNameCase)
     {
     }
 

@@ -61,13 +61,14 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
     readonly bool _includeParentSpanIdPropertyAsTelemetryProperty;
     readonly bool _includeOperationNamePropertyAsTelemetryProperty;
     readonly bool _includeVersionPropertyAsTelemetryProperty;
+    readonly bool _ignorePropertyNameCase;
 
     /// <summary>
     ///     Creates an instance of <see cref="TelemetryConverterBase" /> using default value formatter (
     ///     <see cref="ApplicationInsightsJsonValueFormatter" />).
     /// </summary>
     public TelemetryConverterBase()
-        : this(false, false, false, false)
+        : this(false, false, false, false, true)
     {
     }
 
@@ -91,11 +92,21 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
     ///   if set to <c>true</c> the <see cref="VersionProperty" /> is added to the
     ///   telemetry properties. Otherwise it is only set as <c>ITelemetry.Context.Component.Version</c>.
     /// </param>
+    /// <param name="ignorePropertyNameCase">
+    /// <para>
+    ///   if set to <c>true</c> property name lookups are case insensitive.
+    /// </para>
+    /// <para>
+    ///   The main use case set it to <c>true</c> for maximum compatibility with various logging frameworks
+    ///   but it has a performance impact when there are many properties on the <see cref="LogEvent" />.
+    /// </para>
+    /// </param>
     public TelemetryConverterBase(
         bool includeOperationIdPropertyAsTelemetryProperty,
         bool includeParentSpanIdPropertyAsTelemetryProperty,
         bool includeOperationNamePropertyAsTelemetryProperty,
-        bool includeVersionPropertyAsTelemetryProperty)
+        bool includeVersionPropertyAsTelemetryProperty,
+        bool ignorePropertyNameCase)
     {
         ValueFormatter = new ApplicationInsightsJsonValueFormatter();
 
@@ -103,6 +114,7 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
         _includeParentSpanIdPropertyAsTelemetryProperty = includeParentSpanIdPropertyAsTelemetryProperty;
         _includeOperationNamePropertyAsTelemetryProperty = includeOperationNamePropertyAsTelemetryProperty;
         _includeVersionPropertyAsTelemetryProperty = includeVersionPropertyAsTelemetryProperty;
+        _ignorePropertyNameCase = ignorePropertyNameCase;
     }
 
 #pragma warning disable CS1591
@@ -193,33 +205,27 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
             telemetryProperties.Properties.Add(TelemetryPropertiesMessageTemplate, logEvent.MessageTemplate.Text);
 
         if (telemetryProperties is ITelemetry telemetry)
-        {
             PopulateTelemetryFromLogEvent(logEvent, telemetry);
-
-            if (telemetry.Context?.Component != null
-                && logEvent.Properties.TryGetValue(VersionProperty, out var version))
-                telemetry.Context.Component.Version = version.ToString().Trim('\"');
-        }
 
         var baggageWasForwarded = ForwardActivityBaggage(logEvent, telemetryProperties, formatProvider);
         ForwardSimpleProperties(logEvent, telemetryProperties, baggageWasForwarded);
     }
 
-    private static void PopulateTelemetryFromLogEvent(LogEvent logEvent, ITelemetry telemetry)
+    private void PopulateTelemetryFromLogEvent(LogEvent logEvent, ITelemetry telemetry)
     {
         // Operation.Id (TraceId)
-        if (TrySetOperationIdFromLogEvent(logEvent, telemetry, out var operationId))
+        if (TryGetOperationIdFromLogEvent(logEvent, out var operationId))
             telemetry.Context.Operation.Id = operationId;
         else if (logEvent.TraceId is ActivityTraceId traceId)
             telemetry.Context.Operation.Id = traceId.ToHexString();
 
         // Operation.ParentId (ParentSpanId)
-        if (logEvent.Properties.TryGetValue(ParentSpanIdProperty, out var parentSpanIdProp))
-            telemetry.Context.Operation.ParentId = parentSpanIdProp.ToString().Trim('"');
+        if (TryGetParentSpanIdFromLogEvent(logEvent, out var parentSpanId))
+            telemetry.Context.Operation.ParentId = parentSpanId;
 
         // Operation.Name (OperationName)
-        if (logEvent.Properties.TryGetValue(OperationNameProperty, out var operationNameProp))
-            telemetry.Context.Operation.Name = operationNameProp.ToString().Trim('"');
+        if (TryGetOperationNameFromLogEvent(logEvent, out var operationName))
+            telemetry.Context.Operation.Name = operationName;
 
         // Set Id for RequestTelemetry and DependencyTelemetry
         if (logEvent.SpanId is ActivitySpanId spanId)
@@ -229,31 +235,51 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
             else if (telemetry is DependencyTelemetry dep)
                 dep.Id = spanId.ToHexString();
         }
+
+        if (telemetry.Context?.Component != null
+            && TryGetVersionFromLogEvent(logEvent, out var version))
+            telemetry.Context.Component.Version = version;
     }
 
-    private static bool TrySetOperationIdFromLogEvent(LogEvent logEvent, ITelemetry telemetry, out string operationId)
+    private bool TryGetOperationIdFromLogEvent(LogEvent logEvent, out string operationId)
+        => TryGetPropertyFromLogEventIgnoreCase(logEvent, OperationIdProperty, out operationId);
+
+    private bool TryGetParentSpanIdFromLogEvent(LogEvent logEvent, out string operationId)
+            => TryGetPropertyFromLogEventIgnoreCase(logEvent, ParentSpanIdProperty, out operationId);
+
+    private bool TryGetOperationNameFromLogEvent(LogEvent logEvent, out string operationId)
+    => TryGetPropertyFromLogEventIgnoreCase(logEvent, OperationNameProperty, out operationId);
+
+    private bool TryGetVersionFromLogEvent(LogEvent logEvent, out string version)
+        => TryGetPropertyFromLogEventIgnoreCase(logEvent, VersionProperty, out version);
+
+    private bool TryGetPropertyFromLogEventIgnoreCase(LogEvent logEvent, string propertyName, out string value)
     {
-        operationId = null;
-        if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationIdProp))
+        value = null;
+        if (_ignorePropertyNameCase)
         {
-            operationId = operationIdProp.ToString();
-        }
-        else
-        {
-            operationId = logEvent.Properties
-                            .FirstOrDefault(p => string.Equals(p.Key, OperationIdProperty, StringComparison.OrdinalIgnoreCase))
+            value = logEvent.Properties
+                            .FirstOrDefault(p => string.Equals(p.Key, propertyName, StringComparison.OrdinalIgnoreCase))
                             .Value?
                             .ToString();
         }
+        else if (logEvent.Properties.TryGetValue(propertyName, out var operationIdProp))
+        {
+            value = operationIdProp.ToString();
+        }
+        else
+        {
+            return false;
+        }
 
-        if (string.IsNullOrEmpty(operationId))
+        if (string.IsNullOrEmpty(value))
             return false;
 
-        operationId = operationId.Trim('\"');
+        value = value.Trim('\"');
         return true;
     }
 
-    private static bool ForwardActivityBaggage(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
+    private bool ForwardActivityBaggage(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
     {
         if (!logEvent.Properties.TryGetValue(BaggageProperty, out var baggageProp)
             || baggageProp is not StructureValue baggageStructure)
@@ -282,15 +308,16 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
         var skipParentSpanId = !_includeParentSpanIdPropertyAsTelemetryProperty;
         var skipOperationName = !_includeOperationNamePropertyAsTelemetryProperty;
         var skipVersion = !_includeVersionPropertyAsTelemetryProperty;
+        var stringComparison = _ignorePropertyNameCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
         foreach (var property in logEvent.Properties)
         {
             if (property.Value is null) continue;
-            if (skipOperationId && OperationIdProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
-            if (skipParentSpanId && ParentSpanIdProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
-            if (skipOperationName && OperationNameProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
-            if (skipVersion && VersionProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
-            if (skipBaggage && BaggageProperty.Equals(property.Key, StringComparison.Ordinal)) continue;
+            if (skipOperationId && OperationIdProperty.Equals(property.Key, stringComparison)) continue;
+            if (skipParentSpanId && ParentSpanIdProperty.Equals(property.Key, stringComparison)) continue;
+            if (skipOperationName && OperationNameProperty.Equals(property.Key, stringComparison)) continue;
+            if (skipVersion && VersionProperty.Equals(property.Key, stringComparison)) continue;
+            if (skipBaggage && BaggageProperty.Equals(property.Key, stringComparison)) continue;
             if (telemetryProperties.Properties.ContainsKey(property.Key)) continue;
 
             ValueFormatter.Format(property.Key, property.Value, telemetryProperties.Properties);

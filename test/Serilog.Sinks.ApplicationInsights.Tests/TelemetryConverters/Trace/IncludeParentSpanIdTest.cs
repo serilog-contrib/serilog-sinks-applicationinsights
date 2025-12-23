@@ -6,18 +6,20 @@ namespace Serilog.Sinks.ApplicationInsights.Tests.TelemetryConverters.Trace;
 public class IncludeSpanIdTest : ApplicationInsightsTest
 {
     public IncludeSpanIdTest()
-        : base(new TraceTelemetryConverter(false, true, false, false), true, true)
+        : base(new TraceTelemetryConverter(false, true, false, false, true), true, true)
     {
     }
 
-    [Fact]
-    public void OperationIdIsSetAsTraceProperty()
+    [Theory]
+    [InlineData("Hello, {parentSpanId}!", "parentSpanId", "foo-parent-span-id")]
+    [InlineData("Hello, {ParentSpanId}!", "ParentSpanId", "bar-parent-span-id")]
+    public void ParentSpanIdIsSetAsTraceProperty(string pattern, string parentSpanIdKey, string expectedParentSpanId)
     {
         using var activity = new System.Diagnostics.Activity("TestActivity");
         activity.Start();
 
-        Logger.Information("Hello, {ParentSpanId}!", "foo-parent-span-id");
+        Logger.Information(pattern, expectedParentSpanId);
 
-        Assert.Equal("foo-parent-span-id", LastSubmittedTraceTelemetry.Properties["ParentSpanId"]);
+        Assert.Equal(expectedParentSpanId, LastSubmittedTraceTelemetry.Properties[parentSpanIdKey]);
     }
 }

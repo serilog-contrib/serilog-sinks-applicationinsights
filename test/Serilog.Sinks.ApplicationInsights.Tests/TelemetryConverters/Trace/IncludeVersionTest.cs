@@ -6,18 +6,20 @@ namespace Serilog.Sinks.ApplicationInsights.Tests.TelemetryConverters.Trace;
 public class IncludeVersionTest : ApplicationInsightsTest
 {
     public IncludeVersionTest()
-        : base(new TraceTelemetryConverter(false, false, false, true), true, true)
+        : base(new TraceTelemetryConverter(false, false, false, true, true), true, true)
     {
     }
 
-    [Fact]
-    public void OperationIdIsSetAsTraceProperty()
+    [Theory]
+    [InlineData("Hello, {version}!", "version", "v1.3.3.7")]
+    [InlineData("Hello, {Version}!", "Version", "v4.2.0")]
+    public void VersionSetAsTraceProperty(string pattern, string versionKey, string expectedVersion)
     {
         using var activity = new System.Diagnostics.Activity("TestActivity");
         activity.Start();
 
-        Logger.Information("Hello, {version}!", "v1.3.3.7");
+        Logger.Information(pattern, expectedVersion);
 
-        Assert.Equal("v1.3.3.7", LastSubmittedTraceTelemetry.Properties["version"]);
+        Assert.Equal(expectedVersion, LastSubmittedTraceTelemetry.Properties[versionKey]);
     }
 }
