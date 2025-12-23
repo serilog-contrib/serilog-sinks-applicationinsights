@@ -54,13 +54,15 @@ public class EventTelemetryConverterTest : ApplicationInsightsTest
         Assert.Equal(activity.TraceId.ToHexString(), LastSubmittedEventTelemetry.Context.Operation.Id);
     }
 
-    [Fact]
-    public void OperationIdTakesPrecedenceOverTraceId()
+    [Theory]
+    [InlineData("Hello, {operationId}!")]
+    [InlineData("Hello, {OperationId}!")]
+    public void OperationIdTakesPrecedenceOverTraceId(string messageTemplate)
     {
         using Activity activity = new("TestActivity");
         activity.Start();
         string operationId = Guid.NewGuid().ToString("N");
-        Logger.Information("Hello, {operationId}!", operationId);
+        Logger.Information(messageTemplate, operationId);
         Assert.Equal(operationId, LastSubmittedEventTelemetry.Context.Operation.Id);
         Assert.Null(LastSubmittedEventTelemetry.Context.Operation.ParentId);
     }

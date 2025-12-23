@@ -254,9 +254,9 @@ private class CustomConverter : TraceTelemetryConverter
                 telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
             }
             // post-process the telemetry's context to contain the operation id
-            if (logEvent.Properties.ContainsKey("operationId"))
+            if (logEvent.Properties.ContainsKey("OperationId"))
             {
-                telemetry.Context.Operation.Id = logEvent.Properties["operationId"].ToString();
+                telemetry.Context.Operation.Id = logEvent.Properties["OperationId"].ToString();
             }
             // post-process the telemetry's context to contain the operation parent id
             if (logEvent.Properties.ContainsKey("ParentSpanId"))
@@ -267,7 +267,7 @@ private class CustomConverter : TraceTelemetryConverter
             ISupportProperties propTelemetry = (ISupportProperties)telemetry;
 
             // find redundant properties
-            var removeProps = new[] { "UserId", "ParentSpanId", "operationId" };
+            var removeProps = new[] { "UserId", "ParentSpanId", "OperationId" };
             removeProps = removeProps.Where(prop => propTelemetry.Properties.ContainsKey(prop)).ToArray();
 
             foreach (var prop in removeProps)
@@ -369,7 +369,7 @@ public class OperationIdEnricher : ILogEventEnricher
     {
         if (logEvent.Properties.TryGetValue("RequestId", out var requestId))
         {
-            logEvent.AddPropertyIfAbsent(new LogEventProperty("operationId", requestId));
+            logEvent.AddPropertyIfAbsent(new LogEventProperty("OperationId", requestId));
         }
     }
 }

@@ -33,7 +33,7 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
     /// <summary>
     ///     Property that is included when in log context, will be pushed out as AI operation ID.
     /// </summary>
-    public const string OperationIdProperty = "operationId";
+    public const string OperationIdProperty = "OperationId";
 
     /// <summary>
     ///     Property that is included when in log context, will be pushed out as AI parent span id.
@@ -208,8 +208,8 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
     private static void PopulateTelemetryFromLogEvent(LogEvent logEvent, ITelemetry telemetry)
     {
         // Operation.Id (TraceId)
-        if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationIdProp))
-            telemetry.Context.Operation.Id = operationIdProp.ToString().Trim('"');
+        if (TrySetOperationIdFromLogEvent(logEvent, telemetry, out var operationId))
+            telemetry.Context.Operation.Id = operationId;
         else if (logEvent.TraceId is ActivityTraceId traceId)
             telemetry.Context.Operation.Id = traceId.ToHexString();
 
@@ -229,6 +229,28 @@ public abstract class TelemetryConverterBase : ITelemetryConverter
             else if (telemetry is DependencyTelemetry dep)
                 dep.Id = spanId.ToHexString();
         }
+    }
+
+    private static bool TrySetOperationIdFromLogEvent(LogEvent logEvent, ITelemetry telemetry, out string operationId)
+    {
+        operationId = null;
+        if (logEvent.Properties.TryGetValue(OperationIdProperty, out var operationIdProp))
+        {
+            operationId = operationIdProp.ToString();
+        }
+        else
+        {
+            operationId = logEvent.Properties
+                            .FirstOrDefault(p => string.Equals(p.Key, OperationIdProperty, StringComparison.OrdinalIgnoreCase))
+                            .Value?
+                            .ToString();
+        }
+
+        if (string.IsNullOrEmpty(operationId))
+            return false;
+
+        operationId = operationId.Trim('\"');
+        return true;
     }
 
     private static bool ForwardActivityBaggage(LogEvent logEvent, ISupportProperties telemetryProperties, IFormatProvider formatProvider)
