@@ -26,8 +26,7 @@ public class ActivityBaggageEnricher : ILogEventEnricher
             throw new ArgumentNullException(nameof(propertyFactory));
         }
 
-        Activity activity = Activity.Current;
-        if (activity is null)
+        if (Activity.Current is not {} activity)
         {
             return;
         }
