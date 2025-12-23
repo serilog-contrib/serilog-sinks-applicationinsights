@@ -9,10 +9,13 @@ using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 namespace Serilog.Sinks.ApplicationInsights.Enrichers;
 
 /// <summary>
-/// Enriches log events with the baggage from <see cref="Activity"/>.
+/// Enriches log events with details from <see cref="Activity"/>.
 /// </summary>
-public class ActivityBaggageEnricher : ILogEventEnricher
+public class ActivityDetailsEnricher(bool includeOperationName, bool includeBaggage) : ILogEventEnricher
 {
+    readonly bool _includeOperationName = includeOperationName;
+    readonly bool _includeBaggage = includeBaggage;
+
     /// <inheritdoc/>
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
@@ -26,7 +29,34 @@ public class ActivityBaggageEnricher : ILogEventEnricher
             throw new ArgumentNullException(nameof(propertyFactory));
         }
 
-        if (Activity.Current is not {} activity)
+        if (Activity.Current is not { } activity)
+        {
+            return;
+        }
+
+        EnrichOperationName(logEvent, propertyFactory, activity);
+        EnrichBaggage(logEvent, propertyFactory, activity);
+    }
+
+    private void EnrichOperationName(LogEvent logEvent, ILogEventPropertyFactory propertyFactory, Activity activity)
+    {
+        if (!_includeOperationName)
+        {
+            return;
+        }
+
+        if (activity.OperationName is not string operationName)
+        {
+            return;
+        }
+
+        LogEventProperty operationNameProperty = propertyFactory.CreateProperty(TelemetryConverterBase.OperationNameProperty, operationName);
+        logEvent.AddPropertyIfAbsent(operationNameProperty);
+    }
+
+    private void EnrichBaggage(LogEvent logEvent, ILogEventPropertyFactory propertyFactory, Activity activity)
+    {
+        if (!_includeBaggage)
         {
             return;
         }

@@ -8,12 +8,47 @@ using Xunit;
 
 namespace Serilog.Sinks.ApplicationInsights.Tests.Enrichers;
 
-public class ActivityBaggageEnricherTests
+public class ActivityDetailsEnricherTests
 {
     [Fact]
-    public void Single_baggage_value_is_enriched()
+    public void Operation_name_is_enriched_if_enabled()
     {
-        ActivityBaggageEnricher enricher = new();
+        ActivityDetailsEnricher enricher = new(includeOperationName: true, includeBaggage: false);
+        string operationName = Guid.NewGuid().ToString("N");
+        using Activity activity = new(operationName);
+        activity.Start();
+        LogEvent logEvent = new(DateTimeOffset.Now, LogEventLevel.Information, null, MessageTemplate.Empty, []);
+
+        enricher.Enrich(logEvent, TestLogEventPropertyFactory.Instance);
+
+        bool hasProperty = logEvent.Properties.TryGetValue("OperationName", out LogEventPropertyValue property);
+        Assert.True(hasProperty);
+        Assert.NotNull(property);
+        Assert.IsType<ScalarValue>(property);
+        ScalarValue scalarValue = (ScalarValue)property;
+        Assert.Equal(operationName, scalarValue.Value);
+    }
+
+    [Fact]
+    public void Operation_name_is_not_enriched_if_disabled()
+    {
+        ActivityDetailsEnricher enricher = new(includeOperationName: false, includeBaggage: false);
+        string operationName = Guid.NewGuid().ToString("N");
+        using Activity activity = new(operationName);
+        activity.Start();
+        LogEvent logEvent = new(DateTimeOffset.Now, LogEventLevel.Information, null, MessageTemplate.Empty, []);
+
+        enricher.Enrich(logEvent, TestLogEventPropertyFactory.Instance);
+
+        bool hasProperty = logEvent.Properties.TryGetValue("OperationName", out LogEventPropertyValue property);
+        Assert.False(hasProperty);
+        Assert.Null(property);
+    }
+
+    [Fact]
+    public void Single_baggage_value_is_not_enriched_if_disabled()
+    {
+        ActivityDetailsEnricher enricher = new(includeOperationName: false, includeBaggage: false);
         using Activity activity = new("TestActivity");
         string baggageName = Guid.NewGuid().ToString("N");
         string baggageValue = Guid.NewGuid().ToString("N");
@@ -24,25 +59,17 @@ public class ActivityBaggageEnricherTests
         enricher.Enrich(logEvent, TestLogEventPropertyFactory.Instance);
 
         bool hasProperty = logEvent.Properties.TryGetValue("Baggage", out LogEventPropertyValue property);
-        Assert.True(hasProperty);
-        Assert.NotNull(property);
-        Assert.IsType<StructureValue>(property);
-        StructureValue scalarValue = (StructureValue)property;
-        Assert.Single(scalarValue.Properties);
-        LogEventProperty valueProperty = scalarValue.Properties[0];
-        Assert.Equal(baggageName, valueProperty.Name);
-        Assert.IsType<ScalarValue>(valueProperty.Value);
-        ScalarValue scalarValueInner = (ScalarValue)valueProperty.Value;
-        Assert.Equal(baggageValue, scalarValueInner.Value);
+        Assert.False(hasProperty);
+        Assert.Null(property);
     }
 
     [Fact]
-    public void Multiple_baggage_values_are_enriched()
+    public void Multiple_baggage_values_are_enriched_if_enabled()
     {
         Random random = new();
         Dictionary<string, string> baggageItems = GenerateRandomBaggageItems(10);
 
-        ActivityBaggageEnricher enricher = new();
+        ActivityDetailsEnricher enricher = new(includeOperationName: false, includeBaggage: true);
         using Activity activity = new("TestActivity");
         foreach (var item in baggageItems)
         {

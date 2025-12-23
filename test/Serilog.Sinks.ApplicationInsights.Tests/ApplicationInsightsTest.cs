@@ -20,16 +20,7 @@ public abstract class ApplicationInsightsTest
             .MinimumLevel.Debug()
             .Enrich.FromLogContext();
 
-        if (addOperationNameEnricher)
-        {
-            loggerConfiguration = loggerConfiguration.Enrich.WithOperationName();
-        }
-
-        if (addBaggageEnricher)
-        {
-            loggerConfiguration = loggerConfiguration.Enrich.WithBaggage();
-        }
-
+        loggerConfiguration = loggerConfiguration.Enrich.WithActivityDetails(addOperationNameEnricher, addBaggageEnricher);
         Logger = loggerConfiguration.CreateLogger();
     }
 

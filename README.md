@@ -403,17 +403,11 @@ Precedence for `Context.Operation.Id`: `operationId` property > `TraceId` proper
 
 This sink is designed to work well with Serilog's asynchronous/batched processing. To keep telemetry deterministic, adding `OperationName` and `Baggage` from the ambient `Activity` is an explicit opt-in: copy the values onto the `LogEvent` before it reaches the sink.
 
-Two built-in enrichers are included:
-
-- `ActivityOperationNameEnricher` — copies `Activity.OperationName` into the `OperationName` log event property.
-- `ActivityBaggageEnricher` — copies baggage items from the current `Activity` into the `Baggage` log event property as a `StructureValue`.
-
-Enable them using the provided `Enrich` extension methods:
+The sink includes an enricher that adds this by default. Enable it using the provided `Enrich` extension method:
 
 ```csharp
 Log.Logger = new LoggerConfiguration()
-    .Enrich.WithOperationName()
-    .Enrich.WithBaggage()
+    .Enrich.WithActivityDetails(includeOperationName: true, includeBaggage: true)
     .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces)
     .CreateLogger();
 ```
@@ -422,7 +416,7 @@ Log.Logger = new LoggerConfiguration()
 
 This is a new major release (5.0). Notable changes:
 
-- **OperationName and Baggage are opt-in:** they are only forwarded when present as `LogEvent` properties (use the built-in enrichers above or your own enricher).
+- **OperationName and Baggage are opt-in:** they are only forwarded when present as `LogEvent` properties (use the built-in enricher above or your own enricher).
 - **Less redundancy in custom dimensions by default:** operation-related values are set on `ITelemetry.Context` and are not duplicated into `telemetry.Properties` unless enabled.
 
 ### `TelemetryConverterBase` constructor flags

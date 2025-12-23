@@ -15,17 +15,10 @@ public static class LoggerEnrichmentConfigurationExtensions
     extension(LoggerEnrichmentConfiguration loggerEnrichmentConfiguration)
     {
         /// <summary>
-        ///     Enriches log events with the operation name from <see cref="Activity" />.
+        ///     Enriches log events with details from <see cref="Activity" />.
         /// </summary>
         /// <returns>Logger configuration, allowing configuration to continue.</returns>
-        public LoggerConfiguration WithOperationName()
-            => loggerEnrichmentConfiguration.With<ActivityOperationNameEnricher>();
-
-        /// <summary>
-        ///     Enriches log events with the baggage from <see cref="Activity" />.
-        /// </summary>
-        /// <returns>Logger configuration, allowing configuration to continue.</returns>
-        public LoggerConfiguration WithBaggage()
-            => loggerEnrichmentConfiguration.With<ActivityBaggageEnricher>();
+        public LoggerConfiguration WithActivityDetails(bool includeOperationName = true, bool includeBaggage = true)
+            => loggerEnrichmentConfiguration.With(new ActivityDetailsEnricher(includeOperationName, includeBaggage));
     }
 }
