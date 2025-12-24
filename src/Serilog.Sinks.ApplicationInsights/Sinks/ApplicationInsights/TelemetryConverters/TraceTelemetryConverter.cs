@@ -14,6 +14,28 @@ public class TraceTelemetryConverter : TelemetryConverterBase
 {
     static readonly MessageTemplateTextFormatter MessageTemplateTextFormatter = new("{Message:lj}");
 
+    /// <inheritdoc cref="EventTelemetryConverter(bool, bool, bool, bool, bool)"/>
+    public TraceTelemetryConverter()
+        : this(false, false, false, false, true)
+    {
+    }
+
+    /// <inheritdoc cref="TelemetryConverterBase(bool, bool, bool, bool, bool)"/>
+    public TraceTelemetryConverter(
+        bool includeOperationIdPropertyAsTelemetryProperty,
+        bool includeParentSpanIdPropertyAsTelemetryProperty,
+        bool includeOperationNamePropertyAsTelemetryProperty,
+        bool includeVersionPropertyAsTelemetryProperty,
+        bool ignorePropertyNameCase)
+        : base(
+            includeOperationIdPropertyAsTelemetryProperty,
+            includeParentSpanIdPropertyAsTelemetryProperty,
+            includeOperationNamePropertyAsTelemetryProperty,
+            includeVersionPropertyAsTelemetryProperty,
+            ignorePropertyNameCase)
+    {
+    }
+
     public override IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
     {
         if (logEvent == null)
@@ -24,7 +46,8 @@ public class TraceTelemetryConverter : TelemetryConverterBase
             var sw = new StringWriter();
             MessageTemplateTextFormatter.Format(logEvent, sw);
 
-            var telemetry = new TraceTelemetry(sw.ToString()) {
+            var telemetry = new TraceTelemetry(sw.ToString())
+            {
                 Timestamp = logEvent.Timestamp,
                 SeverityLevel = ToSeverityLevel(logEvent.Level)
             };

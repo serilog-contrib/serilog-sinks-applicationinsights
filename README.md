@@ -1,27 +1,37 @@
-# Serilog.Sinks.ApplicationInsights [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
+# Serilog.Sinks.ApplicationInsights&nbsp;[![Build status](https://github.com/serilog-contrib/serilog-sinks-applicationinsights/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/serilog-contrib/serilog-sinks-applicationinsights/actions)&nbsp;[![NuGet Version](https://img.shields.io/nuget/v/Serilog.Sinks.ApplicationInsights.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)&nbsp;[![NuGet Downloads](https://img.shields.io/nuget/dt/Serilog.Sinks.ApplicationInsights.svg)](https://www.nuget.org/packages/Serilog.Sinks.ApplicationInsights/)
 
 A sink for Serilog that writes events to Microsoft Application Insights. This sink comes with several defaults that send
 Serilog `LogEvent` messages to Application Insights as either `EventTelemetry` or `TraceTelemetry`.
 
+## Install
+
+```powershell
+dotnet add package Serilog.Sinks.ApplicationInsights
+```
+
 ## Configuring
 
-The simplest way to configure Serilog to send data to a Application Insights dashboard via instrumentation key is to use
-current active *telemetry configuration* which is already initialised in most application types like ASP.NET Core, Azure
-Functions etc.:
+The recommended way to configure the sink is to reuse the `TelemetryConfiguration` (or `TelemetryClient`) already configured by your application (for example via dependency injection in ASP.NET Core, Azure Functions, Worker Services).
 
 ```csharp
-var log = new LoggerConfiguration()
-    .WriteTo.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Traces)
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.ApplicationInsights(
+        telemetryConfiguration, // from DI (recommended)
+        TelemetryConverter.Traces)
     .CreateLogger();
 ```
 
-.. or as `EventTelemetry`:
+If you don't have an existing `TelemetryConfiguration` (uncommon), you can use the connection string overload:
 
 ```csharp
-var log = new LoggerConfiguration()
-    .WriteTo.ApplicationInsights(TelemetryConfiguration.Active, TelemetryConverter.Events)
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.ApplicationInsights(
+        "<your Application Insights connection string>",
+        TelemetryConverter.Traces)
     .CreateLogger();
 ```
+
+Legacy: some older application types used `TelemetryConfiguration.Active`. This is not recommended on modern .NET and may be deprecated depending on the Application Insights SDK version.
 
 > You can also pass an *instrumentation key* and this sink will create a new `TelemetryConfiguration` based on it,
 > however it's actively discouraged compared to using already initialised telemetry configuration, as your telemetry
@@ -48,7 +58,7 @@ in `ConfigureServices`.
 Log.Logger = new LoggerConfiguration()
     .WriteTo.ApplicationInsights(
         serviceProvider.GetRequiredService<TelemetryConfiguration>(),
-	TelemetryConverter.Traces)
+        TelemetryConverter.Traces)
     .CreateLogger();
 ```
 
@@ -57,10 +67,10 @@ startup errors can be caught and properly logged. The problem is that now we're 
 to setup the logger early, but we need the `TelemetryConfiguration` which still haven't been added to our DI container.
 
 Luckily [from version 4.0.x of the `Serilog.Extensions.Hosting` we have the possibility to configure a bootstrap logger](https://nblumhardt.com/2020/10/bootstrap-logger/)
-to capture early errors, and then change it using DI dependant services once they are configured.
+to capture early errors, and then change it using DI-dependent services once they are configured.
 
 ```csharp
-// dotnet add package serilog.extensions.hosting -v 4.0.0-*
+// dotnet add package Serilog.Extensions.Hosting
 
 public static class Program
 {
@@ -88,8 +98,8 @@ public static class Program
         Host.CreateDefaultBuilder(args)
             .UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
                 .WriteTo.ApplicationInsights(
-		    services.GetRequiredService<TelemetryConfiguration>(),
-		    TelemetryConverter.Traces))
+                    services.GetRequiredService<TelemetryConfiguration>(),
+                    TelemetryConverter.Traces))
             .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
 }
 ```
@@ -120,7 +130,7 @@ with [ReadFrom.Configuration(configuration)](https://github.com/serilog/serilog-
         "Args": {
           "connectionString": "[your connection string here]",
           "telemetryConverter":
-	    "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"
+                        "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"
         }
       }
     ],
@@ -143,6 +153,10 @@ By default, trace telemetry submits:
 - **rendered message** in trace's standard *message* property.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
+- **operation id** from `OperationId` property, or the `LogEvent.TraceId` property.
+- **operation parent id** from `ParentSpanId` property.
+- **operation name** from `OperationName` property.
+- **component version** from `Version` property.
 - **messageTemplate** in *customDimensions*.
 - **custom log properties** as *customDimensions*.
 
@@ -151,6 +165,10 @@ Event telemetry submits:
 - **message template** as *event name*.
 - **renderedMessage** in *customDimensions*.
 - **timestamp** in event's standard *timestamp* property.
+- **operation id** from `OperationId` property, or the `LogEvent.TraceId` property.
+- **operation parent id** from `ParentSpanId` property.
+- **operation name** from `OperationName` property.
+- **component version** from `Version` property.
 - **custom log properties** as *customDimensions*.
 
 Exception telemetry submits:
@@ -158,6 +176,10 @@ Exception telemetry submits:
 - **exception** as standard AI exception.
 - **severity** in trace's standard *severityLevel* property.
 - **timestamp** in trace's standard *timestamp* property.
+- **operation id** from `OperationId` property, or the `LogEvent.TraceId` property.
+- **operation parent id** from `ParentSpanId` property.
+- **operation name** from `OperationName` property.
+- **component version** from `Version` property.
 - **custom log properties** as *customDimensions*.
 
 > Note that **log context** properties are also included in *customDimensions* when Serilog is configured
@@ -232,26 +254,26 @@ private class CustomConverter : TraceTelemetryConverter
                 telemetry.Context.User.Id = logEvent.Properties["UserId"].ToString();
             }
             // post-process the telemetry's context to contain the operation id
-            if (logEvent.Properties.ContainsKey("operation_Id"))
+            if (logEvent.Properties.ContainsKey("OperationId"))
             {
-                telemetry.Context.Operation.Id = logEvent.Properties["operation_Id"].ToString();
+                telemetry.Context.Operation.Id = logEvent.Properties["OperationId"].ToString();
             }
             // post-process the telemetry's context to contain the operation parent id
-            if (logEvent.Properties.ContainsKey("operation_parentId"))
+            if (logEvent.Properties.ContainsKey("ParentSpanId"))
             {
-                telemetry.Context.Operation.ParentId = logEvent.Properties["operation_parentId"].ToString();
+                telemetry.Context.Operation.ParentId = logEvent.Properties["ParentSpanId"].ToString();
             }
             // typecast to ISupportProperties so you can manipulate the properties as desired
-            ISupportProperties propTelematry = (ISupportProperties)telemetry;
+            ISupportProperties propTelemetry = (ISupportProperties)telemetry;
 
             // find redundant properties
-            var removeProps = new[] { "UserId", "operation_parentId", "operation_Id" };
-            removeProps = removeProps.Where(prop => propTelematry.Properties.ContainsKey(prop)).ToArray();
+            var removeProps = new[] { "UserId", "ParentSpanId", "OperationId" };
+            removeProps = removeProps.Where(prop => propTelemetry.Properties.ContainsKey(prop)).ToArray();
 
             foreach (var prop in removeProps)
             {
                 // remove redundant properties
-                propTelematry.Properties.Remove(prop);
+                propTelemetry.Properties.Remove(prop);
             }
 
             yield return telemetry;
@@ -270,7 +292,7 @@ instance, let's include `renderedMessage` in event telemetry:
 ```csharp
 private class IncludeRenderedMessageConverter : EventTelemetryConverter
 {
-    public override void ForwardPropertiesToTelemetryProperties(LogEvent logEvent, 
+    public override void ForwardPropertiesToTelemetryProperties(LogEvent logEvent,
         ISupportProperties telemetryProperties, IFormatProvider formatProvider)
     {
         base.ForwardPropertiesToTelemetryProperties(logEvent, telemetryProperties, formatProvider,
@@ -299,18 +321,17 @@ You can control when AI shall flush its messages, for example when your applicat
 // private TelemetryClient _telemetryClient;
 
 // ...
-_telemetryClient = new TelemetryClient()
-            {
-                InstrumentationKey = "<My AI Instrumentation Key>"
-            };
+var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
+telemetryConfiguration.ConnectionString = "<your Application Insights connection string>";
+
+_telemetryClient = new TelemetryClient(telemetryConfiguration);
 ```
 
 2) Use that custom `TelemetryClient` to initialize the Sink:
 
 ```csharp
 var log = new LoggerConfiguration()
-    .WriteTo
-	.ApplicationInsights(_telemetryClient, TelemetryConverter.Events)
+    .WriteTo.ApplicationInsights(_telemetryClient, TelemetryConverter.Events)
     .CreateLogger();
 ```
 
@@ -325,7 +346,7 @@ _telemetryClient.Flush();
 
 await Task.Delay(1000);
 
-// or 
+// or
 
 System.Threading.Thread.Sleep(1000);
 
@@ -333,8 +354,10 @@ System.Threading.Thread.Sleep(1000);
 
 ## Including Operation Id
 
-Application Insight's operation id is pushed out if you set `operationId` LogEvent property. If it's present, AI's
-operation id will be overridden by the value from this property.
+Application Insight's operation id is set from the following sources in order of precedence:
+
+1. `OperationId` LogEvent property
+2. `TraceId` LogEvent property
 
 This can be set like so:
 
@@ -346,7 +369,7 @@ public class OperationIdEnricher : ILogEventEnricher
     {
         if (logEvent.Properties.TryGetValue("RequestId", out var requestId))
         {
-            logEvent.AddPropertyIfAbsent(new LogEventProperty("operationId", requestId));
+            logEvent.AddPropertyIfAbsent(new LogEventProperty("OperationId", requestId));
         }
     }
 }
@@ -354,14 +377,67 @@ public class OperationIdEnricher : ILogEventEnricher
 
 ## Including Version
 
-Application Insight supports component version and is pushed out if you set `version` log event property. If it's
+Application Insight supports component version and is pushed out if you set `Version` log event property. If it's
 present, AI's operation version will include the value from this property.
+
+## Using with SerilogTracing
+
+[SerilogTracing](https://github.com/serilog-tracing/serilog-tracing) provides tracing primitives that integrate with Serilog's structured logging. When used with this sink, tracing context is automatically included in Application Insights telemetry.
+
+The following `LogEvent` properties are mapped to Application Insights telemetry:
+
+| LogEvent Property | Application Insights Telemetry | Notes |
+|-------------------|---------------------------------|-------|
+| `TraceId` | `Context.Operation.Id` | From TraceId captured in LogEvent |
+| `SpanId` | `Id` (for Request/Dependency telemetry) | From SpanId captured in LogEvent |
+| `ParentSpanId` | `Context.Operation.ParentId` | |
+| `OperationName` | `Context.Operation.Name` | |
+| `OperationId` | `Context.Operation.Id` | Overrides TraceId |
+| `Version` | `Context.Component.Version` | |
+
+If present, `Baggage` is forwarded to Application Insights custom dimensions (`telemetry.Properties`).
+
+Precedence for `Context.Operation.Id`: `OperationId` property > `TraceId` property (when both `OperationId` and `TraceId` properties are absent).
+
+### Enriching from `Activity` (explicit opt-in)
+
+This sink is designed to work well with Serilog's asynchronous/batched processing. To keep telemetry deterministic, adding `OperationName` and `Baggage` from the ambient `Activity` is an explicit opt-in: copy the values onto the `LogEvent` before it reaches the sink.
+
+The sink includes an enricher that adds this by default. Enable it using the provided `Enrich` extension method:
+
+```csharp
+Log.Logger = new LoggerConfiguration()
+    .Enrich.WithActivityDetails(includeOperationName: true, includeBaggage: true)
+    .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces)
+    .CreateLogger();
+```
+
+## Upgrading to 5.0 (from 4.x)
+
+This is a new major release (5.0). Notable changes:
+
+- **OperationName and Baggage are opt-in:** they are only forwarded when present as `LogEvent` properties (use the built-in enricher above or your own enricher).
+- **Less redundancy in custom dimensions by default:** operation-related values are set on `ITelemetry.Context` and are not duplicated into `telemetry.Properties` unless enabled.
+
+### `TelemetryConverterBase` constructor flags
+
+Converters derived from `TelemetryConverterBase` can be configured to also include selected operation-related values in `telemetry.Properties` (custom dimensions):
+
+```csharp
+public TelemetryConverterBase(
+    bool includeOperationIdPropertyAsTelemetryProperty,
+    bool includeParentSpanIdPropertyAsTelemetryProperty,
+    bool includeOperationNamePropertyAsTelemetryProperty,
+    bool includeVersionPropertyAsTelemetryProperty)
+```
+
+If you previously relied on these values being present in `telemetry.Properties`, enable the relevant flags when constructing your converter, or post-process telemetry in a custom converter.
 
 ## Using with Azure Functions
 
 Azure functions has out of the box integration with Application Insights, which automatically logs functions execution
 start, end, and any exception. Please refer to
-the [original documenation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to
+the [original documentation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring) on how to
 enable it.
 
 This sink can enrich AI messages, preserving *operation_Id* and other context information which is *already provided by
@@ -377,7 +453,7 @@ namespace MyFunctions
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            builder.Services.AddSingleton<ILoggerProvider>((sp) => 
+            builder.Services.AddSingleton<ILoggerProvider>((sp) =>
             {
                 Log.Logger = new LoggerConfiguration()
                     .Enrich.FromLogContext()
@@ -390,7 +466,7 @@ namespace MyFunctions
 }
 ```
 
-Copyright &copy; 2022 Serilog Contributors - Provided under
+Copyright &copy; 2025 Serilog Contributors - Provided under
 the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
 See also: [Serilog Documentation](https://github.com/serilog/serilog/wiki)

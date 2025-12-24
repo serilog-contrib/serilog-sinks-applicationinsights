@@ -11,15 +11,17 @@ public abstract class ApplicationInsightsTest
 {
     readonly UnitTestTelemetryChannel _channel;
 
-    protected ApplicationInsightsTest(ITelemetryConverter converter = null)
+    protected ApplicationInsightsTest(ITelemetryConverter converter = null, bool addOperationNameEnricher = false, bool addBaggageEnricher = false)
     {
         var tc = new TelemetryConfiguration { TelemetryChannel = _channel = new UnitTestTelemetryChannel() };
 
-        Logger = new LoggerConfiguration()
+        var loggerConfiguration = new LoggerConfiguration()
             .WriteTo.ApplicationInsights(tc, converter ?? TelemetryConverter.Traces)
             .MinimumLevel.Debug()
-            .Enrich.FromLogContext()
-            .CreateLogger();
+            .Enrich.FromLogContext();
+
+        loggerConfiguration = loggerConfiguration.Enrich.WithActivityDetails(addOperationNameEnricher, addBaggageEnricher);
+        Logger = loggerConfiguration.CreateLogger();
     }
 
     protected ILogger Logger { get; }

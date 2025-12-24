@@ -10,13 +10,36 @@ namespace Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 public class EventTelemetryConverter : TelemetryConverterBase
 {
+    /// <inheritdoc cref="EventTelemetryConverter(bool, bool, bool, bool, bool)"/>
+    public EventTelemetryConverter()
+        : this(false, false, false, false, true)
+    {
+    }
+
+    /// <inheritdoc cref="TelemetryConverterBase(bool, bool, bool, bool, bool)"/>
+    public EventTelemetryConverter(
+        bool includeOperationIdPropertyAsTelemetryProperty,
+        bool includeParentSpanIdPropertyAsTelemetryProperty,
+        bool includeOperationNamePropertyAsTelemetryProperty,
+        bool includeVersionPropertyAsTelemetryProperty,
+        bool ignorePropertyNameCase)
+               : base(
+            includeOperationIdPropertyAsTelemetryProperty,
+            includeParentSpanIdPropertyAsTelemetryProperty,
+            includeOperationNamePropertyAsTelemetryProperty,
+            includeVersionPropertyAsTelemetryProperty,
+            ignorePropertyNameCase)
+    {
+    }
+
     public override IEnumerable<ITelemetry> Convert(LogEvent logEvent, IFormatProvider formatProvider)
     {
         if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
         if (logEvent.Exception == null)
         {
-            var telemetry = new EventTelemetry(logEvent.MessageTemplate.Text) {
+            var telemetry = new EventTelemetry(logEvent.MessageTemplate.Text)
+            {
                 Timestamp = logEvent.Timestamp
             };
 
