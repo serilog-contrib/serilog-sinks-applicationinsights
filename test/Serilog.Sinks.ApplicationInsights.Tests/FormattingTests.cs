@@ -53,7 +53,7 @@ public class FormattingTests : ApplicationInsightsTest
     [Fact]
     public void OperationId_from_logContext_is_included()
     {
-        using (LogContext.PushProperty("operationId", "myId1"))
+        using (LogContext.PushProperty("OperationId", "myId1"))
         {
             Logger.Information("capture id?");
 

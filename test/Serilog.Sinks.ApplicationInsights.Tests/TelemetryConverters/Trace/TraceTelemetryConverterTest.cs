@@ -1,13 +1,12 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 using Xunit;
 
-namespace Serilog.Sinks.ApplicationInsights.Tests;
+namespace Serilog.Sinks.ApplicationInsights.Tests.TelemetryConverters.Trace;
 
 public class TraceTelemetryConverterTest : ApplicationInsightsTest
 {
-    public TraceTelemetryConverterTest() : base(new TraceTelemetryConverter())
+    public TraceTelemetryConverterTest() : base(new TraceTelemetryConverter(), true, true)
     {
     }
 
@@ -40,31 +39,70 @@ public class TraceTelemetryConverterTest : ApplicationInsightsTest
     }
 
     [Fact]
-    public void TraceIdAndSpanIdDefaultByDefault()
+    public void TraceIdIsNullByDefault()
     {
         Logger.Information("Hello, {Name}!", "world");
         Assert.Null(LastSubmittedTraceTelemetry.Context.Operation.Id);
-        Assert.Null(LastSubmittedTraceTelemetry.Context.Operation.ParentId);
     }
 
     [Fact]
-    public void TraceIdAndSpanIdAreSet()
+    public void TraceIdIsSet()
     {
         using Activity activity = new("TestActivity");
         activity.Start();
         Logger.Information("Hello, {Name}!", "world");
         Assert.Equal(activity.TraceId.ToHexString(), LastSubmittedTraceTelemetry.Context.Operation.Id);
-        Assert.Equal(activity.SpanId.ToHexString(), LastSubmittedTraceTelemetry.Context.Operation.ParentId);
     }
 
-    [Fact]
-    public void OperationIdTakesPrecedenceOverTraceId()
+    [Theory]
+    [InlineData("Hello, {operationId}!")]
+    [InlineData("Hello, {OperationId}!")]
+    public void OperationIdTakesPrecedenceOverTraceId(string messageTemplate)
     {
         using Activity activity = new("TestActivity");
         activity.Start();
         string operationId = Guid.NewGuid().ToString("N");
-        Logger.Information("Hello, {operationId}!", operationId);
+        Logger.Information(messageTemplate, operationId);
         Assert.Equal(operationId, LastSubmittedTraceTelemetry.Context.Operation.Id);
         Assert.Null(LastSubmittedTraceTelemetry.Context.Operation.ParentId);
+    }
+
+    [Fact]
+    public void ParentSpanIdIsSet()
+    {
+        Logger.Information("Test {ParentSpanId}", "parent123");
+        Assert.Equal("parent123", LastSubmittedTraceTelemetry.Context.Operation.ParentId);
+    }
+
+    [Fact]
+    public void VersionIsSet()
+    {
+        Logger.Information("Test {version}", "1.2.3");
+        Assert.Equal("1.2.3", LastSubmittedTraceTelemetry.Context.Component.Version);
+    }
+
+    [Fact]
+    public void OperationNameIsSet()
+    {
+        using Activity activity = new("MyOperation");
+        activity.Start();
+
+        Logger.Information("Test");
+
+        Assert.Equal("MyOperation", LastSubmittedTraceTelemetry.Context.Operation.Name);
+    }
+
+    [Fact]
+    public void BaggageIsSet()
+    {
+        using Activity activity = new("TestActivity");
+        activity.AddBaggage("key1", "value1");
+        activity.AddBaggage("key2", "value2");
+        activity.Start();
+
+        Logger.Information("Hello, world!");
+
+        Assert.Equal("value1", LastSubmittedTraceTelemetry.Properties["key1"]);
+        Assert.Equal("value2", LastSubmittedTraceTelemetry.Properties["key2"]);
     }
 }

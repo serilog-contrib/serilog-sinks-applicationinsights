@@ -3,7 +3,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
-namespace Serilog.Sinks.ApplicationInsights.Tests;
+namespace Serilog.Sinks.ApplicationInsights.Tests.TelemetryConverters.Event;
 
 public class CustomiseEventTelemetryConverterTest : ApplicationInsightsTest
 {
