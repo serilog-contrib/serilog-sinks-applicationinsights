@@ -23,12 +23,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Serilog" Version="4.3.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.23.0" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="[2.23.0,3.0.0)" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\assets\icon.png" Pack="true" Visible="false" PackagePath=""/>
+    <None Include="..\..\assets\icon.png" Pack="true" Visible="false" PackagePath="" />
     <None Include="..\..\README.md" Pack="true" Visible="false" PackagePath="/" />
   </ItemGroup>
 
